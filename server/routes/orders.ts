@@ -1,0 +1,100 @@
+import { Router } from "express";
+import { getDb } from "../db";
+import { orders, products } from "../../drizzle/schema";
+import { eq } from "drizzle-orm";
+
+const router = Router();
+
+// Get all orders
+router.get("/", async (req, res) => {
+  try {
+    const db = await getDb();
+    if (!db) {
+      return res.status(500).json({ error: "Database not available" });
+    }
+    const allOrders = await db.select().from(orders);
+    res.json(allOrders);
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res.status(500).json({ error: "Failed to fetch orders" });
+  }
+});
+
+// Get single order
+router.get("/:id", async (req, res) => {
+  try {
+    const db = await getDb();
+    if (!db) {
+      return res.status(500).json({ error: "Database not available" });
+    }
+    const order = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, parseInt(req.params.id)));
+    if (order.length === 0) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+    res.json(order[0]);
+  } catch (error) {
+    console.error("Error fetching order:", error);
+    res.status(500).json({ error: "Failed to fetch order" });
+  }
+});
+
+// Create order
+router.post("/", async (req, res) => {
+  try {
+    const db = await getDb();
+    if (!db) {
+      return res.status(500).json({ error: "Database not available" });
+    }
+    const { productId, customerName, customerEmail, customerPhone, price, notes } = req.body;
+
+    if (!productId || !customerName || !customerEmail || !price) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const newOrder = await db.insert(orders).values({
+      productId: parseInt(productId),
+      customerName,
+      customerEmail,
+      customerPhone,
+      price: parseInt(price),
+      status: "pending",
+      paymentMethod: "bank_transfer",
+      notes,
+    });
+
+    res.status(201).json({ success: true, id: newOrder[0] });
+  } catch (error) {
+    console.error("Error creating order:", error);
+    res.status(500).json({ error: "Failed to create order" });
+  }
+});
+
+// Update order status
+router.patch("/:id", async (req, res) => {
+  try {
+    const db = await getDb();
+    if (!db) {
+      return res.status(500).json({ error: "Database not available" });
+    }
+    const { status, notes } = req.body;
+
+    const updates: any = {};
+    if (status !== undefined) updates.status = status;
+    if (notes !== undefined) updates.notes = notes;
+
+    await db
+      .update(orders)
+      .set(updates)
+      .where(eq(orders.id, parseInt(req.params.id)));
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error updating order:", error);
+    res.status(500).json({ error: "Failed to update order" });
+  }
+});
+
+export default router;

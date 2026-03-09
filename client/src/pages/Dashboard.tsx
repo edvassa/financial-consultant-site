@@ -1,0 +1,302 @@
+import { useAuth } from "@/_core/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Download, Plus, Trash2, Eye, EyeOff } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  category: string;
+  isActive: number;
+  fileUrl?: string;
+  fileName?: string;
+  createdAt: string;
+}
+
+interface Order {
+  id: number;
+  productId: number;
+  customerName: string;
+  customerEmail: string;
+  price: number;
+  status: string;
+  createdAt: string;
+  productName?: string;
+}
+
+interface ConsultationBooking {
+  id: number;
+  clientName: string;
+  clientEmail: string;
+  consultationType: string;
+  status: string;
+  createdAt: string;
+}
+
+export default function Dashboard() {
+  const { user, isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setLocation("/");
+      return;
+    }
+    fetchData();
+  }, [isAuthenticated]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [productsRes, ordersRes, bookingsRes] = await Promise.all([
+        fetch("/api/products"),
+        fetch("/api/orders"),
+        fetch("/api/consultations"),
+      ]);
+
+      if (productsRes.ok) setProducts(await productsRes.json());
+      if (ordersRes.ok) setOrders(await ordersRes.json());
+      if (bookingsRes.ok) setBookings(await bookingsRes.json());
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteProduct = async (id: number) => {
+    if (confirm("Are you sure you want to delete this product?")) {
+      try {
+        await fetch(`/api/products/${id}`, { method: "DELETE" });
+        setProducts(products.filter((p) => p.id !== id));
+      } catch (error) {
+        console.error("Error deleting product:", error);
+      }
+    }
+  };
+
+  const handleToggleProduct = async (id: number, isActive: number) => {
+    try {
+      await fetch(`/api/products/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: isActive ? 0 : 1 }),
+      });
+      setProducts(
+        products.map((p) => (p.id === id ? { ...p, isActive: isActive ? 0 : 1 } : p))
+      );
+    } catch (error) {
+      console.error("Error updating product:", error);
+    }
+  };
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocation("/")}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Site
+            </Button>
+            <h1 className="text-2xl font-bold text-slate-900">Admin Dashboard</h1>
+          </div>
+          <div className="text-sm text-slate-600">
+            Welcome, <strong>{user?.name}</strong>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Tabs defaultValue="products" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsTrigger value="products">Products ({products.length})</TabsTrigger>
+            <TabsTrigger value="orders">Orders ({orders.length})</TabsTrigger>
+            <TabsTrigger value="consultations">Consultations ({bookings.length})</TabsTrigger>
+          </TabsList>
+
+          {/* Products Tab */}
+          <TabsContent value="products" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-bold text-slate-900">Manage Products</h2>
+              <Button className="bg-green-700 hover:bg-green-800 gap-2">
+                <Plus className="h-4 w-4" />
+                Add Product
+              </Button>
+            </div>
+
+            <div className="grid gap-4">
+              {products.length === 0 ? (
+                <Card>
+                  <CardContent className="pt-6 text-center text-slate-600">
+                    No products yet. Click "Add Product" to create your first one.
+                  </CardContent>
+                </Card>
+              ) : (
+                products.map((product) => (
+                  <Card key={product.id} className="border-slate-200">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-slate-900">{product.name}</CardTitle>
+                          <CardDescription>
+                            {product.price.toLocaleString()} MDL • {product.category}
+                          </CardDescription>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleToggleProduct(product.id, product.isActive)}
+                          >
+                            {product.isActive ? (
+                              <Eye className="h-4 w-4" />
+                            ) : (
+                              <EyeOff className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteProduct(product.id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {product.fileUrl && (
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                          <Download className="h-4 w-4" />
+                          <span>{product.fileName}</span>
+                        </div>
+                      )}
+                      <p className="text-xs text-slate-500 mt-2">
+                        Created: {new Date(product.createdAt).toLocaleDateString()}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Orders Tab */}
+          <TabsContent value="orders" className="space-y-6">
+            <h2 className="text-xl font-bold text-slate-900">Customer Orders</h2>
+
+            <div className="grid gap-4">
+              {orders.length === 0 ? (
+                <Card>
+                  <CardContent className="pt-6 text-center text-slate-600">
+                    No orders yet. When customers make purchases, they'll appear here.
+                  </CardContent>
+                </Card>
+              ) : (
+                orders.map((order) => (
+                  <Card key={order.id} className="border-slate-200">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-slate-900">{order.customerName}</CardTitle>
+                          <CardDescription>{order.customerEmail}</CardDescription>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-green-700">
+                            {order.price.toLocaleString()} MDL
+                          </div>
+                          <div className={`text-xs font-semibold ${
+                            order.status === "paid"
+                              ? "text-green-600"
+                              : order.status === "pending"
+                              ? "text-yellow-600"
+                              : "text-slate-600"
+                          }`}>
+                            {order.status.toUpperCase()}
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-slate-600 mb-2">
+                        <strong>Product:</strong> {order.productName}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Ordered: {new Date(order.createdAt).toLocaleDateString()}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Consultations Tab */}
+          <TabsContent value="consultations" className="space-y-6">
+            <h2 className="text-xl font-bold text-slate-900">Consultation Requests</h2>
+
+            <div className="grid gap-4">
+              {bookings.length === 0 ? (
+                <Card>
+                  <CardContent className="pt-6 text-center text-slate-600">
+                    No consultation requests yet.
+                  </CardContent>
+                </Card>
+              ) : (
+                bookings.map((booking) => (
+                  <Card key={booking.id} className="border-slate-200">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-slate-900">{booking.clientName}</CardTitle>
+                          <CardDescription>{booking.clientEmail}</CardDescription>
+                        </div>
+                        <div className={`text-xs font-semibold px-2 py-1 rounded ${
+                          booking.status === "new"
+                            ? "bg-blue-100 text-blue-700"
+                            : booking.status === "scheduled"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-slate-100 text-slate-700"
+                        }`}>
+                          {booking.status.toUpperCase()}
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-slate-600 mb-2">
+                        <strong>Type:</strong> {booking.consultationType}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Requested: {new Date(booking.createdAt).toLocaleDateString()}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}

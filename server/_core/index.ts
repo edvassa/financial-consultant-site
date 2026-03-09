@@ -8,6 +8,9 @@ import { registerChatRoutes } from "./chat";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import productsRouter from "../routes/products";
+import ordersRouter from "../routes/orders";
+import consultationsRouter from "../routes/consultations";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -38,6 +41,12 @@ async function startServer() {
   registerOAuthRoutes(app);
   // Chat API with streaming and tool calling
   registerChatRoutes(app);
+  // Product management API
+  app.use("/api/products", productsRouter);
+  // Orders API
+  app.use("/api/orders", ordersRouter);
+  // Consultations API
+  app.use("/api/consultations", consultationsRouter);
   // tRPC API
   app.use(
     "/api/trpc",

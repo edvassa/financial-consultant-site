@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, products, orders, consultationBookings } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -87,6 +87,52 @@ export async function getUserByOpenId(openId: string) {
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
 
   return result.length > 0 ? result[0] : undefined;
+}
+
+// Product queries
+export async function getProducts() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(products).where(eq(products.isActive, 1));
+}
+
+export async function getProductById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(products).where(eq(products.id, id)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function createProduct(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(products).values(data);
+}
+
+// Order queries
+export async function getOrders() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(orders);
+}
+
+export async function createOrder(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(orders).values(data);
+}
+
+// Consultation queries
+export async function getConsultations() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(consultationBookings);
+}
+
+export async function createConsultation(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(consultationBookings).values(data);
 }
 
 // TODO: add feature queries here as your schema grows.
