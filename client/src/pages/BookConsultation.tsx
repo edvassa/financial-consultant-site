@@ -23,12 +23,12 @@ export default function BookConsultation() {
   });
 
   const consultationTypes = [
-    { value: "one-time", label: "Разовая консультация - 2,000 MDL" },
-    { value: "financial-startup", label: "Финансовый старт - 5,000 MDL" },
-    { value: "accounting-setup", label: "Постановка управленческого учета - 10,000 MDL" },
-    { value: "financing-help", label: "Помощь в привлечении финансирования - 20,000 MDL" },
-    { value: "reporting", label: "Регламентированная отчетность - 20,000 MDL" },
-    { value: "outsourced-director", label: "Ежемесячный аутсорс финансового директора - 20,000 MDL/месяц" },
+    { value: "one-time", label: "Разовая консультация" },
+    { value: "financial-startup", label: "Финансовый старт" },
+    { value: "accounting-setup", label: "Постановка управленческого учета" },
+    { value: "financing-help", label: "Помощь в привлечении финансирования" },
+    { value: "reporting", label: "Регламентированная отчетность" },
+    { value: "outsourced-director", label: "Ежемесячный аутсорс финансового директора" },
   ];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
