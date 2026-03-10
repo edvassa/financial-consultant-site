@@ -23,12 +23,12 @@ export default function BookConsultation() {
   });
 
   const consultationTypes = [
-    { value: "one-time", label: "One-time Consultation - 2,000 MDL" },
-    { value: "financial-startup", label: "Financial Startup - 5,000 MDL" },
-    { value: "accounting-setup", label: "Setting up Management Accounting - 10,000 MDL" },
-    { value: "financing-help", label: "Help with Financing - 20,000 MDL" },
-    { value: "reporting", label: "Regulated Reporting - 20,000 MDL" },
-    { value: "outsourced-director", label: "Monthly Outsourced Financial Director - 20,000 MDL/month" },
+    { value: "one-time", label: "Разовая консультация - 2,000 MDL" },
+    { value: "financial-startup", label: "Финансовый старт - 5,000 MDL" },
+    { value: "accounting-setup", label: "Постановка управленческого учета - 10,000 MDL" },
+    { value: "financing-help", label: "Помощь в привлечении финансирования - 20,000 MDL" },
+    { value: "reporting", label: "Регламентированная отчетность - 20,000 MDL" },
+    { value: "outsourced-director", label: "Ежемесячный аутсорс финансового директора - 20,000 MDL/месяц" },
   ];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -53,14 +53,14 @@ export default function BookConsultation() {
 
       if (response.ok) {
         setSubmitted(true);
-        toast.success("Consultation request submitted! I'll contact you soon.");
+        toast.success("Ваша заявка на консультацию отправлена! Я свяжусь с вами в ближайшее время.");
         setTimeout(() => setLocation("/"), 3000);
       } else {
-        toast.error("Failed to submit consultation request");
+        toast.error("Ошибка при отправке заявки");
       }
     } catch (error) {
       console.error("Error:", error);
-      toast.error("An error occurred. Please try again.");
+      toast.error("Произошла ошибка. Пожалуйста, попробуйте еще раз.");
     } finally {
       setLoading(false);
     }
@@ -72,15 +72,15 @@ export default function BookConsultation() {
         <Card className="max-w-md w-full border-green-200 bg-white">
           <CardContent className="pt-12 text-center">
             <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Thank You!</h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Спасибо!</h2>
             <p className="text-slate-600 mb-6">
-              Your consultation request has been received. I'll contact you within 24 hours to confirm the details.
+              Ваша заявка на консультацию получена. Я свяжусь с вами в течение 24 часов для подтверждения деталей.
             </p>
             <Button
               onClick={() => setLocation("/")}
               className="w-full bg-green-700 hover:bg-green-800"
             >
-              Back to Home
+              На главную
             </Button>
           </CardContent>
         </Card>
@@ -97,14 +97,14 @@ export default function BookConsultation() {
           className="mb-6 gap-2 text-slate-600 hover:text-slate-900"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back
+          Назад
         </Button>
 
         <Card className="border-slate-200 bg-white">
           <CardHeader className="bg-gradient-to-r from-green-700 to-green-600 text-white rounded-t-lg">
-            <CardTitle className="text-2xl">Book a Consultation</CardTitle>
+            <CardTitle className="text-2xl">Забронировать консультацию</CardTitle>
             <CardDescription className="text-green-100">
-              Let's discuss your financial needs and find the perfect solution for your business
+              Давайте обсудим ваши финансовые потребности и найдем идеальное решение для вашего бизнеса
             </CardDescription>
           </CardHeader>
 
@@ -113,14 +113,14 @@ export default function BookConsultation() {
               {/* Name */}
               <div className="space-y-2">
                 <Label htmlFor="clientName" className="text-slate-700 font-semibold">
-                  Full Name *
+                  Полное имя *
                 </Label>
                 <Input
                   id="clientName"
                   name="clientName"
                   value={formData.clientName}
                   onChange={handleChange}
-                  placeholder="Your name"
+                  placeholder="Ваше имя"
                   required
                   className="border-slate-300"
                 />
@@ -129,7 +129,7 @@ export default function BookConsultation() {
               {/* Email */}
               <div className="space-y-2">
                 <Label htmlFor="clientEmail" className="text-slate-700 font-semibold">
-                  Email Address *
+                  Email адрес *
                 </Label>
                 <Input
                   id="clientEmail"
@@ -137,7 +137,7 @@ export default function BookConsultation() {
                   type="email"
                   value={formData.clientEmail}
                   onChange={handleChange}
-                  placeholder="your@email.com"
+                  placeholder="ваш@email.com"
                   required
                   className="border-slate-300"
                 />
@@ -146,7 +146,7 @@ export default function BookConsultation() {
               {/* Phone */}
               <div className="space-y-2">
                 <Label htmlFor="clientPhone" className="text-slate-700 font-semibold">
-                  Phone Number *
+                  Номер телефона *
                 </Label>
                 <Input
                   id="clientPhone"
@@ -162,7 +162,7 @@ export default function BookConsultation() {
               {/* Consultation Type */}
               <div className="space-y-2">
                 <Label htmlFor="consultationType" className="text-slate-700 font-semibold">
-                  Consultation Type *
+                  Тип консультации *
                 </Label>
                 <Select value={formData.consultationType} onValueChange={handleSelectChange}>
                   <SelectTrigger className="border-slate-300">
@@ -181,7 +181,7 @@ export default function BookConsultation() {
               {/* Preferred Date */}
               <div className="space-y-2">
                 <Label htmlFor="preferredDate" className="text-slate-700 font-semibold">
-                  Preferred Date
+                  Предпочитаемая дата
                 </Label>
                 <Input
                   id="preferredDate"
@@ -196,14 +196,14 @@ export default function BookConsultation() {
               {/* Message */}
               <div className="space-y-2">
                 <Label htmlFor="message" className="text-slate-700 font-semibold">
-                  Additional Information
+                  Дополнительная информация
                 </Label>
                 <Textarea
                   id="message"
                   name="message"
                   value={formData.message}
                   onChange={handleChange}
-                  placeholder="Tell me about your business and what you'd like to discuss..."
+                  placeholder="Расскажите о вашем бизнесе и что вы хотели бы обсудить..."
                   className="border-slate-300 min-h-32 resize-none"
                 />
               </div>
@@ -214,11 +214,11 @@ export default function BookConsultation() {
                 disabled={loading}
                 className="w-full bg-green-700 hover:bg-green-800 text-white font-semibold py-3 text-lg"
               >
-                {loading ? "Submitting..." : "Submit Consultation Request"}
+                {loading ? "Отправка..." : "Отправить заявку на консультацию"}
               </Button>
 
               <p className="text-xs text-slate-500 text-center">
-                After payment confirmation, I'll contact you to schedule the consultation at your preferred time.
+                После подтверждения платежа я свяжусь с вами для согласования времени консультации.
               </p>
             </form>
           </CardContent>
@@ -227,20 +227,20 @@ export default function BookConsultation() {
         {/* Payment Info Card */}
         <Card className="mt-8 border-slate-200 bg-blue-50">
           <CardHeader>
-            <CardTitle className="text-slate-900">Payment Information</CardTitle>
+            <CardTitle className="text-slate-900">Реквизиты для оплаты</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <p className="text-slate-700">
               <strong>IBAN:</strong> MD93ML022510000000007084
             </p>
             <p className="text-slate-700">
-              <strong>Beneficiary:</strong> ELVIAN TRADE PLUS S.R.L.
+              <strong>Получатель:</strong> ELVIAN TRADE PLUS S.R.L.
             </p>
             <p className="text-slate-700">
-              <strong>Currency:</strong> MDL (Moldovan Leu)
+              <strong>Валюта:</strong> MDL (Молдавский лей)
             </p>
             <p className="text-slate-600 mt-4">
-              After making the payment, please send confirmation to <strong>edvassa@gmail.com</strong> with your order details.
+              После оплаты пожалуйста отправьте подтверждение на <strong>edvassa@gmail.com</strong> с деталями вашего заказа.
             </p>
           </CardContent>
         </Card>
