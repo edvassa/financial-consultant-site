@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 
 // Consultant photo URL (cleaned version)
-const CONSULTANT_PHOTO = "https://private-us-east-1.manuscdn.com/webdev-static-assets/elena_turcan_portrait_clean.png";
+const CONSULTANT_PHOTO = "https://d2xsxph8kpxj0f.cloudfront.net/310419663030588662/Cp4PZg8zcaAboFkhLCd7R5/elena_clean_portrait_331f0015.png";
 
 // Services and products data
 const PRODUCTS = [
@@ -21,59 +21,58 @@ const PRODUCTS = [
   {
     id: 2,
     name: "Унифицированные шаблоны",
-    price: 200,
     category: "digital",
     description: "Готовые формы для учета в малых компаниях",
     details: "Набор простых готовых форм для управления учетом в малых компаниях.",
+    showPrice: false,
   },
   {
     id: 3,
     name: "Разовая консультация",
-    price: 2000,
     category: "service",
     description: "Онлайн-встреча 1.5-2 часа для обсуждения конкретных вопросов",
     details: "Онлайн-встреча (1.5-2 часа) для обсуждения конкретного вопроса или проблемы клиента. Включает предварительный просмотр документов.",
+    showPrice: false,
   },
   {
     id: 4,
     name: "Финансовый старт",
-    price: 5000,
     category: "service",
     description: "Разработка простой финмодели для стартапа или микробизнеса",
     details: "Разработка и внедрение простой финансовой модели для стартапа или микробизнеса.",
+    showPrice: false,
   },
   {
     id: 5,
     name: "Постановка управленческого учета",
-    price: 10000,
     category: "service",
     description: "Полное внедрение системы отчетности (P&L, Cash Flow, Balance)",
     details: "Разработка и внедрение системы отчетности (P&L, Cash Flow, Balance), настройка сбора данных, обучение владельца и/или сотрудников.",
+    showPrice: false,
   },
   {
     id: 6,
     name: "Помощь в привлечении финансирования",
-    price: 20000,
     category: "service",
     description: "Подготовка документов для коммерческих банков при подаче заявки на кредит",
     details: "Подготовка документов для коммерческих банков при финансировании бизнеса.",
+    showPrice: false,
   },
   {
     id: 7,
     name: "Регламентированная отчетность",
-    price: 20000,
     category: "service",
     description: "Подготовка и сдача отчетности в НБМ",
     details: "Подготовка и сдача отчетности для платежных обществ и небанковских кредитных организаций в НБМ.",
+    showPrice: false,
   },
   {
     id: 8,
     name: "Ежемесячный аутсорс финансового директора",
-    price: 20000,
     category: "subscription",
     description: "Ежемесячный управленческий учет, анализ и стратегическая поддержка",
     details: "Ежемесячный управленческий учет, анализ результатов, регулярные встречи с владельцем для обсуждения результатов и планирования, помощь в стратегических решениях.",
-    isMonthly: true,
+    showPrice: false,
   },
 ];
 
@@ -244,12 +243,18 @@ export default function Home() {
                 <CardContent>
                   <p className="text-slate-600 text-sm mb-6">{product.details}</p>
                   <div className="flex justify-between items-center">
-                    <div className="text-2xl font-bold text-green-700">
-                      {product.price.toLocaleString()} MDL
-                      {product.isMonthly && <span className="text-sm font-normal text-slate-600">/месяц</span>}
-                    </div>
-                    <Button size="sm" className="bg-green-700 hover:bg-green-800">
-                      Выбрать
+                    {product.showPrice !== false && product.price && (
+                      <div className="text-2xl font-bold text-green-700">
+                        {product.price.toLocaleString()} MDL
+                        {(product as any).isMonthly && <span className="text-sm font-normal text-slate-600">/месяц</span>}
+                      </div>
+                    )}
+                    <Button 
+                      size="sm" 
+                      className="bg-green-700 hover:bg-green-800"
+                      onClick={() => setLocation("/book-consultation")}
+                    >
+                      Оставить заявку
                     </Button>
                   </div>
                 </CardContent>

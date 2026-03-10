@@ -21,6 +21,8 @@
 - [x] Display payment instructions (IBAN: MD93ML022510000000007084)
 - [x] Create orders API for tracking purchases
 - [x] Create consultations API for booking requests
+- [x] Remove prices from all services except book ("From Chaos to Profit")
+- [x] Replace "Book Consultation" button with "Leave Request" for all services
 - [ ] Set up file download system for digital products (book, templates)
 - [ ] Create admin dashboard for managing products and orders
 - [ ] Implement order tracking for customers
@@ -36,6 +38,10 @@
 
 ## Phase 5: Launch & Documentation
 - [x] Create checkpoint for backup
+- [x] Translate all content to Russian
+- [x] Clean photo from extra text
+- [x] Remove prices from services (except book)
+- [x] Change buttons to "Leave Request"
 - [ ] Deploy website
 - [x] Provide user with access instructions
 - [ ] Document how to upload products
