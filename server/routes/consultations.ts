@@ -2,6 +2,7 @@ import { Router } from "express";
 import { getDb } from "../db";
 import { consultationBookings } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
+import { notifyOwner } from "../_core/notification";
 
 const router = Router();
 
@@ -65,6 +66,26 @@ router.post("/", async (req, res) => {
       status: "new",
     });
 
+    // Send notification to owner
+    const consultationTypeLabel = getConsultationTypeLabel(consultationType);
+    const notificationContent = `
+Новая заявка на консультацию:
+
+Имя клиента: ${clientName}
+Email: ${clientEmail}
+Телефон: ${clientPhone}
+Тип консультации: ${consultationTypeLabel}
+Предпочитаемая дата: ${preferredDate || "Не указана"}
+
+Дополнительная информация:
+${message || "Не указана"}
+    `.trim();
+
+    await notifyOwner({
+      title: "Новая заявка на консультацию",
+      content: notificationContent,
+    });
+
     res.status(201).json({ success: true, id: newBooking[0] });
   } catch (error) {
     console.error("Error creating consultation:", error);
@@ -96,5 +117,18 @@ router.patch("/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to update consultation" });
   }
 });
+
+// Helper function to get consultation type label
+function getConsultationTypeLabel(type: string): string {
+  const labels: Record<string, string> = {
+    "one-time": "Разовая консультация",
+    "financial-startup": "Финансовый старт",
+    "accounting-setup": "Постановка управленческого учета",
+    "financing-help": "Помощь в привлечении финансирования",
+    "reporting": "Регламентированная отчетность",
+    "outsourced-director": "Ежемесячный аутсорс финансового директора",
+  };
+  return labels[type] || type;
+}
 
 export default router;

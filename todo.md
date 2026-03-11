@@ -23,6 +23,7 @@
 - [x] Create consultations API for booking requests
 - [x] Remove prices from all services except book ("From Chaos to Profit")
 - [x] Replace "Book Consultation" button with "Leave Request" for all services
+- [x] Implement automatic email notifications to edvassa@gmail.com for new consultation bookings
 - [ ] Set up file download system for digital products (book, templates)
 - [ ] Create admin dashboard for managing products and orders
 - [ ] Implement order tracking for customers
