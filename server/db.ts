@@ -109,6 +109,18 @@ export async function createProduct(data: any) {
   return db.insert(products).values(data);
 }
 
+export async function deleteProduct(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(products).where(eq(products.id, id));
+}
+
+export async function updateProduct(id: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(products).set(data).where(eq(products.id, id));
+}
+
 // Order queries
 export async function getOrders() {
   const db = await getDb();
