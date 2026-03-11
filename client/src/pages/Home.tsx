@@ -252,9 +252,18 @@ export default function Home() {
                     <Button 
                       size="sm" 
                       className="bg-green-700 hover:bg-green-800"
-                      onClick={() => setLocation("/book-consultation")}
+                      onClick={() => {
+                        if (product.id === 1) {
+                          // Book - scroll to payment section
+                          const paymentSection = document.querySelector('[data-payment-section]');
+                          paymentSection?.scrollIntoView({ behavior: 'smooth' });
+                        } else {
+                          // Other services - go to consultation form
+                          setLocation("/book-consultation");
+                        }
+                      }}
                     >
-                      Оставить заявку
+                      {product.id === 1 ? "ОПЛАТИТЬ" : "Оставить заявку"}
                     </Button>
                   </div>
                 </CardContent>
@@ -265,7 +274,7 @@ export default function Home() {
       </section>
 
       {/* Payment Information Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16" data-payment-section>
         <Card className="border-slate-200 bg-slate-50">
           <CardHeader>
             <CardTitle className="text-slate-900">Реквизиты для оплаты</CardTitle>
