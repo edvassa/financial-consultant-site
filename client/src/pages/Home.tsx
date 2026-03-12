@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowRight, CheckCircle2, Globe, TrendingUp, Shield } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
+import FeaturedBlog from "@/components/FeaturedBlog";
 
 // Consultant photo URL (cleaned version)
 const CONSULTANT_PHOTO = "https://d2xsxph8kpxj0f.cloudfront.net/310419663030588662/Cp4PZg8zcaAboFkhLCd7R5/elena_clean_portrait_331f0015.png";
@@ -159,7 +160,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* About Section */}
+      {/* Featured Blog Section */}
+      <FeaturedBlog />
+
+      {/* Contact Section */}
       <section className="bg-slate-900 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
@@ -314,6 +318,9 @@ export default function Home() {
           </CardContent>
         </Card>
       </section>
+
+      {/* Featured Blog Section */}
+      <FeaturedBlog />
 
       {/* Contact Section */}
       <section className="bg-green-700 text-white py-16">

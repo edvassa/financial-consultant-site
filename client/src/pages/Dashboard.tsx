@@ -127,10 +127,11 @@ export default function Dashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="products" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-4 mb-8">
             <TabsTrigger value="products">Products ({products.length})</TabsTrigger>
             <TabsTrigger value="orders">Orders ({orders.length})</TabsTrigger>
             <TabsTrigger value="consultations">Consultations ({bookings.length})</TabsTrigger>
+            <TabsTrigger value="blog">Blog</TabsTrigger>
           </TabsList>
 
           {/* Products Tab */}
@@ -294,6 +295,25 @@ export default function Dashboard() {
                 ))
               )}
             </div>
+          </TabsContent>
+
+          {/* Blog Tab */}
+          <TabsContent value="blog" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-bold text-slate-900">Manage Blog</h2>
+              <Button
+                onClick={() => setLocation("/admin/blog")}
+                className="bg-green-700 hover:bg-green-800 gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Manage Articles
+              </Button>
+            </div>
+            <Card>
+              <CardContent className="pt-6 text-center text-slate-600">
+                <p className="mb-4">Click "Manage Articles" to add, edit, or delete blog posts</p>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
