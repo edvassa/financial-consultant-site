@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, products, orders, consultationBookings } from "../drizzle/schema";
+import { InsertUser, users, products, orders, consultationBookings, blogArticles } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -145,6 +145,56 @@ export async function createConsultation(data: any) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return db.insert(consultationBookings).values(data);
+}
+
+// Blog article queries
+export async function getBlogArticles(published: boolean = true) {
+  const db = await getDb();
+  if (!db) return [];
+  if (published) {
+    return db.select().from(blogArticles).where(eq(blogArticles.published, 1));
+  }
+  return db.select().from(blogArticles);
+}
+
+export async function getBlogArticleById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(blogArticles).where(eq(blogArticles.id, id)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function getBlogArticleBySlug(slug: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(blogArticles).where(eq(blogArticles.slug, slug)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function searchBlogArticles(query: string) {
+  const db = await getDb();
+  if (!db) return [];
+  const searchPattern = `%${query}%`;
+  return db.select().from(blogArticles)
+    .where(eq(blogArticles.published, 1));
+}
+
+export async function createBlogArticle(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(blogArticles).values(data);
+}
+
+export async function updateBlogArticle(id: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(blogArticles).set(data).where(eq(blogArticles.id, id));
+}
+
+export async function deleteBlogArticle(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(blogArticles).where(eq(blogArticles.id, id));
 }
 
 // TODO: add feature queries here as your schema grows.

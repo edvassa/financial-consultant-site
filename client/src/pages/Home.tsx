@@ -109,7 +109,14 @@ export default function Home() {
       <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="text-2xl font-bold text-slate-900">FinDirector</div>
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-center">
+            <Button
+              variant="ghost"
+              onClick={() => setLocation("/blog")}
+              className="text-slate-600 hover:text-slate-900"
+            >
+              Блог
+            </Button>
             {isAuthenticated ? (
               <Button variant="outline">Панель управления</Button>
             ) : (

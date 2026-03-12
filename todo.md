@@ -66,3 +66,14 @@
 6. Help with Financing - 20,000 MDL
 7. Regulated Reporting - 20,000 MDL
 8. Monthly Outsourced Financial Director - from 20,000 MDL/month
+
+
+## Phase 6: Blog Feature
+- [x] Create blog articles table in database
+- [x] Create blog API endpoints (create, read, update, delete, search)
+- [ ] Create blog admin panel for article management (UI)
+- [x] Build blog listing page with search functionality
+- [x] Implement article image upload to S3 (base64 support)
+- [x] Create individual article page
+- [x] Add blog link to navigation
+- [x] Test blog functionality

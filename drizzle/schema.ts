@@ -78,3 +78,20 @@ export const consultationBookings = mysqlTable("consultationBookings", {
 
 export type ConsultationBooking = typeof consultationBookings.$inferSelect;
 export type InsertConsultationBooking = typeof consultationBookings.$inferInsert;
+
+// Blog articles table
+export const blogArticles = mysqlTable("blogArticles", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  content: text("content").notNull(),
+  excerpt: text("excerpt"),
+  imageUrl: varchar("imageUrl", { length: 1024 }),
+  imageKey: varchar("imageKey", { length: 1024 }), // S3 file key for image
+  published: int("published").default(0), // 0 = draft, 1 = published
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BlogArticle = typeof blogArticles.$inferSelect;
+export type InsertBlogArticle = typeof blogArticles.$inferInsert;
