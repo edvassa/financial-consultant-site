@@ -3,6 +3,7 @@ import { useLocation, useRoute } from "wouter";
 import { ArrowLeft, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import SocialShare from "@/components/SocialShare";
 
 interface BlogArticle {
   id: number;
@@ -143,6 +144,15 @@ export default function BlogArticle() {
             ))}
           </div>
         </Card>
+
+        {/* Social Share Section */}
+        <div className="mt-8 p-6 bg-white rounded-lg border border-slate-200">
+          <SocialShare
+            title={article.title}
+            url={typeof window !== "undefined" ? window.location.href : ""}
+            description={article.excerpt || article.content.substring(0, 160)}
+          />
+        </div>
 
         {/* Back Button */}
         <div className="mt-8 text-center">

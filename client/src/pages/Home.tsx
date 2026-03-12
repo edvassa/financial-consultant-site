@@ -329,12 +329,7 @@ export default function Home() {
           <p className="text-lg mb-8 max-w-2xl mx-auto">
             Свяжитесь со мной, чтобы обсудить ваши финансовые потребности и найти идеальное решение для вашего бизнеса.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="tel:+37369002909">
-              <Button size="lg" variant="secondary">
-                Позвонить: +373 69 00 29 09
-              </Button>
-            </a>
+          <div className="flex justify-center">
             <a href="mailto:edvassa@gmail.com">
               <Button size="lg" variant="secondary">
                 Email: edvassa@gmail.com
