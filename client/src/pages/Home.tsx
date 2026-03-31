@@ -342,9 +342,9 @@ export default function Home() {
             <div>
               <h4 className="text-white font-bold mb-4">Быстрые ссылки</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-white">Главная</a></li>
-                <li><a href="#" className="hover:text-white">Услуги</a></li>
-                <li><a href="#" className="hover:text-white">Блог</a></li>
+                <li><button onClick={() => setLocation('/')} className="hover:text-white cursor-pointer">Главная</button></li>
+                <li><button onClick={() => setLocation('/#services')} className="hover:text-white cursor-pointer">Услуги</button></li>
+                <li><button onClick={() => setLocation('/blog')} className="hover:text-white cursor-pointer">Блог</button></li>
               </ul>
             </div>
             <div>
