@@ -2,6 +2,7 @@ import { Router } from "express";
 import { getDb } from "../db";
 import { orders, products } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
+import { notifyOwner } from "../_core/notification";
 
 const router = Router();
 
@@ -64,6 +65,31 @@ router.post("/", async (req, res) => {
       paymentMethod: "bank_transfer",
       notes,
     });
+
+    // Get product name
+    const product = await db.select().from(products).where(eq(products.id, parseInt(productId)));
+    const productName = product.length > 0 ? product[0].name : "Unknown Product";
+
+    // Send email notification to owner
+    try {
+      const notificationContent = `
+Новый заказ:
+
+Продукт: ${productName}
+Имя клиента: ${customerName}
+Email: ${customerEmail}
+Телефон: ${customerPhone}
+Цена: ${price} MDL
+Примечания: ${notes || "Нет"}
+      `.trim();
+
+      await notifyOwner({
+        title: "Новый заказ",
+        content: notificationContent,
+      });
+    } catch (notificationError) {
+      console.error("Error sending notification:", notificationError);
+    }
 
     res.status(201).json({ success: true, id: newOrder[0] });
   } catch (error) {
