@@ -14,6 +14,9 @@ interface BlogArticle {
   content: string;
   imageUrl: string | null;
   published: number;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  seoKeywords: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,6 +36,9 @@ export default function AdminBlog() {
     excerpt: "",
     content: "",
     published: false,
+    seoTitle: "",
+    seoDescription: "",
+    seoKeywords: "",
   });
 
   useEffect(() => {
@@ -110,7 +116,16 @@ export default function AdminBlog() {
         toast.success(editingId ? "Статья обновлена" : "Статья создана");
         setShowForm(false);
         setEditingId(null);
-        setFormData({ title: "", slug: "", excerpt: "", content: "", published: false });
+        setFormData({
+          title: "",
+          slug: "",
+          excerpt: "",
+          content: "",
+          published: false,
+          seoTitle: "",
+          seoDescription: "",
+          seoKeywords: "",
+        });
         setImagePreview(null);
         setImageFile(null);
         fetchArticles();
@@ -131,6 +146,9 @@ export default function AdminBlog() {
       excerpt: article.excerpt || "",
       content: article.content,
       published: article.published === 1,
+      seoTitle: article.seoTitle || "",
+      seoDescription: article.seoDescription || "",
+      seoKeywords: article.seoKeywords || "",
     });
     if (article.imageUrl) {
       setImagePreview(article.imageUrl);
@@ -158,7 +176,16 @@ export default function AdminBlog() {
   const handleCancel = () => {
     setShowForm(false);
     setEditingId(null);
-    setFormData({ title: "", slug: "", excerpt: "", content: "", published: false });
+    setFormData({
+      title: "",
+      slug: "",
+      excerpt: "",
+      content: "",
+      published: false,
+      seoTitle: "",
+      seoDescription: "",
+      seoKeywords: "",
+    });
     setImagePreview(null);
     setImageFile(null);
   };
@@ -282,13 +309,86 @@ export default function AdminBlog() {
                   />
                 </div>
 
+                {/* SEO Section */}
+                <div className="border-t border-slate-200 pt-6">
+                  <h3 className="text-lg font-semibold text-slate-900 mb-4">SEO оптимизация</h3>
+
+                  {/* SEO Title */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      SEO заголовок (до 60 символов)
+                    </label>
+                    <div className="relative">
+                      <Input
+                        type="text"
+                        value={formData.seoTitle}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            seoTitle: e.target.value.slice(0, 60),
+                          })
+                        }
+                        placeholder="Заголовок для поисковых систем"
+                        className="border-slate-300"
+                        maxLength={60}
+                      />
+                      <span className="absolute right-3 top-3 text-xs text-slate-500">
+                        {formData.seoTitle.length}/60
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* SEO Description */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      SEO описание (до 160 символов)
+                    </label>
+                    <div className="relative">
+                      <textarea
+                        value={formData.seoDescription}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            seoDescription: e.target.value.slice(0, 160),
+                          })
+                        }
+                        placeholder="Описание для поисковых систем"
+                        rows={3}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                        maxLength={160}
+                      />
+                      <span className="absolute right-3 bottom-3 text-xs text-slate-500">
+                        {formData.seoDescription.length}/160
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* SEO Keywords */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      SEO ключевые слова (через запятую)
+                    </label>
+                    <Input
+                      type="text"
+                      value={formData.seoKeywords}
+                      onChange={(e) =>
+                        setFormData({ ...formData, seoKeywords: e.target.value })
+                      }
+                      placeholder="финансовый консультант, инвестиции, планирование"
+                      className="border-slate-300"
+                    />
+                  </div>
+                </div>
+
                 {/* Published */}
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     id="published"
                     checked={formData.published}
-                    onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, published: e.target.checked })
+                    }
                     className="w-4 h-4 rounded border-slate-300 text-green-700"
                   />
                   <label htmlFor="published" className="text-sm font-medium text-slate-700">
@@ -340,7 +440,10 @@ export default function AdminBlog() {
         ) : (
           <div className="grid gap-4">
             {articles.map((article) => (
-              <Card key={article.id} className="border-slate-200 bg-white hover:shadow-md transition-shadow">
+              <Card
+                key={article.id}
+                className="border-slate-200 bg-white hover:shadow-md transition-shadow"
+              >
                 <CardContent className="p-6">
                   <div className="flex gap-4 items-start">
                     {article.imageUrl && (
@@ -355,11 +458,18 @@ export default function AdminBlog() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <h3 className="text-lg font-semibold text-slate-900">{article.title}</h3>
+                          <h3 className="text-lg font-semibold text-slate-900">
+                            {article.title}
+                          </h3>
                           <p className="text-sm text-slate-500 mt-1">/{article.slug}</p>
                           {article.excerpt && (
                             <p className="text-sm text-slate-600 mt-2 line-clamp-2">
                               {article.excerpt}
+                            </p>
+                          )}
+                          {article.seoKeywords && (
+                            <p className="text-xs text-slate-500 mt-2">
+                              <strong>Ключевые слова:</strong> {article.seoKeywords}
                             </p>
                           )}
                           <div className="flex items-center gap-4 mt-3">

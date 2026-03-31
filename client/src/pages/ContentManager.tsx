@@ -53,6 +53,14 @@ const DEFAULT_CONTENT = {
     file_url: "",
     file_type: "",
   },
+  seo: {
+    meta_title: "Финансовый консультант | Услуги CFO онлайн",
+    meta_description: "Профессиональные услуги финансового консультирования. Готовые решения (шаблоны, обучение) и индивидуальные консультации для вашего бизнеса.",
+    meta_keywords: "финансовый директор, финансовый консультант, финанализ, CFO консультант, бухгалтерский учет, финансовое планирование",
+    og_title: "Финансовый консультант | Услуги CFO онлайн",
+    og_description: "Профессиональные услуги финансового консультирования. Готовые решения и индивидуальные консультации.",
+    og_image: "",
+  },
 };
 
 const SECTIONS = [
@@ -63,6 +71,7 @@ const SECTIONS = [
   { key: "final_cta", label: "Финальный призыв к действию" },
   { key: "footer", label: "Подвал сайта" },
   { key: "learn_more", label: "Узнать больше" },
+  { key: "seo", label: "SEO оптимизация" },
 ];
 
 export default function ContentManager() {
@@ -224,7 +233,7 @@ export default function ContentManager() {
                 <CardContent>
                   <div className="space-y-6">
                     {Object.entries(sectionData).map(([key, value]: [string, any]) => {
-                      if (key === "file_url" || key === "file_type") return null;
+                      if (key === "file_url" || key === "file_type" || key === "og_image") return null;
                       
                       const label = key
                         .replace(/_/g, " ")
@@ -268,31 +277,102 @@ export default function ContentManager() {
                         );
                       }
 
+                      if (key === "og_image") {
+                        return (
+                          <div key={key}>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                              Open Graph изображение (для соцсетей)
+                            </label>
+                            <div className="flex items-center gap-4">
+                              <input
+                                type="file"
+                                accept=".jpg,.jpeg,.png"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onload = (event) => {
+                                      handleFieldChange("og_image", event.target?.result as string);
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                                disabled={isUploading}
+                                className="flex-1"
+                              />
+                              {value && typeof value === "string" && (
+                                <div className="w-20 h-20 rounded-lg overflow-hidden bg-slate-200">
+                                  <img
+                                    src={value}
+                                    alt="OG Preview"
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // Determine if field should be textarea
+                      const isLongText = typeof value === "string" && value.length > 100;
+                      const isMetaField = key.startsWith("meta_") || key.startsWith("og_");
+                      
+                      // Add character counter for meta fields
+                      let maxLength = undefined;
+                      if (key === "meta_title" || key === "og_title") maxLength = 60;
+                      if (key === "meta_description" || key === "og_description") maxLength = 160;
+                      
                       return (
                         <div key={key}>
                           <label className="block text-sm font-medium text-slate-700 mb-2">
                             {label}
+                            {isMetaField && (
+                              <span className="text-xs text-slate-500 ml-2">
+                                {maxLength && `(макс. ${maxLength} символов)`}
+                              </span>
+                            )}
                           </label>
-                          {typeof value === "string" && value.length > 100 ? (
-                            <textarea
-                              value={value}
-                              onChange={(e) =>
-                                handleFieldChange(key, e.target.value)
-                              }
-                              rows={4}
-                              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-700 focus:border-transparent"
-                              placeholder={`Введите ${label.toLowerCase()}`}
-                            />
+                          {isLongText ? (
+                            <div className="relative">
+                              <textarea
+                                value={value}
+                                onChange={(e) => {
+                                  let newValue = e.target.value;
+                                  if (maxLength) newValue = newValue.slice(0, maxLength);
+                                  handleFieldChange(key, newValue);
+                                }}
+                                rows={key === "meta_keywords" ? 2 : 4}
+                                maxLength={maxLength}
+                                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-700 focus:border-transparent"
+                                placeholder={`Введите ${label.toLowerCase()}`}
+                              />
+                              {maxLength && (
+                                <span className="absolute right-3 bottom-3 text-xs text-slate-500">
+                                  {value.length}/{maxLength}
+                                </span>
+                              )}
+                            </div>
                           ) : (
-                            <input
-                              type="text"
-                              value={value}
-                              onChange={(e) =>
-                                handleFieldChange(key, e.target.value)
-                              }
-                              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-700 focus:border-transparent"
-                              placeholder={`Введите ${label.toLowerCase()}`}
-                            />
+                            <div className="relative">
+                              <input
+                                type="text"
+                                value={value}
+                                onChange={(e) => {
+                                  let newValue = e.target.value;
+                                  if (maxLength) newValue = newValue.slice(0, maxLength);
+                                  handleFieldChange(key, newValue);
+                                }}
+                                maxLength={maxLength}
+                                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-700 focus:border-transparent"
+                                placeholder={`Введите ${label.toLowerCase()}`}
+                              />
+                              {maxLength && (
+                                <span className="absolute right-3 top-3 text-xs text-slate-500">
+                                  {value.length}/{maxLength}
+                                </span>
+                              )}
+                            </div>
                           )}
                         </div>
                       );

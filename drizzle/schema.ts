@@ -89,6 +89,10 @@ export const blogArticles = mysqlTable("blogArticles", {
   imageUrl: varchar("imageUrl", { length: 1024 }),
   imageKey: varchar("imageKey", { length: 1024 }), // S3 file key for image
   published: int("published").default(0), // 0 = draft, 1 = published
+  // SEO fields
+  seoTitle: varchar("seoTitle", { length: 60 }), // SEO title for search engines
+  seoDescription: varchar("seoDescription", { length: 160 }), // Meta description for search engines
+  seoKeywords: varchar("seoKeywords", { length: 255 }), // Comma-separated keywords
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

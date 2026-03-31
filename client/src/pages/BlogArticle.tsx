@@ -13,6 +13,9 @@ interface BlogArticle {
   content: string;
   imageUrl: string | null;
   published: number;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  seoKeywords: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -93,6 +96,43 @@ export default function BlogArticle() {
       </div>
     );
   }
+
+  // Set SEO meta tags
+  useEffect(() => {
+    if (article) {
+      // Update document title
+      document.title = article.seoTitle || article.title;
+      
+      // Update meta tags
+      const updateMetaTag = (name: string, content: string) => {
+        let tag = document.querySelector(`meta[name="${name}"]`);
+        if (!tag) {
+          tag = document.createElement('meta');
+          tag.setAttribute('name', name);
+          document.head.appendChild(tag);
+        }
+        tag.setAttribute('content', content);
+      };
+      
+      const updateOGTag = (property: string, content: string) => {
+        let tag = document.querySelector(`meta[property="${property}"]`);
+        if (!tag) {
+          tag = document.createElement('meta');
+          tag.setAttribute('property', property);
+          document.head.appendChild(tag);
+        }
+        tag.setAttribute('content', content);
+      };
+      
+      updateMetaTag('description', article.seoDescription || article.excerpt || article.content.substring(0, 160));
+      updateMetaTag('keywords', article.seoKeywords || '');
+      updateOGTag('og:title', article.seoTitle || article.title);
+      updateOGTag('og:description', article.seoDescription || article.excerpt || article.content.substring(0, 160));
+      if (article.imageUrl) {
+        updateOGTag('og:image', article.imageUrl);
+      }
+    }
+  }, [article]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">

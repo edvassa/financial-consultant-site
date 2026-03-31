@@ -36,6 +36,13 @@
       "when": 1774966139823,
       "tag": "0004_tan_rocket_raccoon",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1774982022109,
+      "tag": "0005_gigantic_manta",
+      "breakpoints": true
     }
   ]
 }
