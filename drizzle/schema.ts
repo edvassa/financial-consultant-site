@@ -108,3 +108,14 @@ export const blogSubscribers = mysqlTable("blogSubscribers", {
 
 export type BlogSubscriber = typeof blogSubscribers.$inferSelect;
 export type InsertBlogSubscriber = typeof blogSubscribers.$inferInsert;
+
+// Content management table for managing all website text content
+export const contentPages = mysqlTable("contentPages", {
+  id: int("id").autoincrement().primaryKey(),
+  pageKey: varchar("pageKey", { length: 255 }).notNull().unique(), // e.g., "home", "about", "services"
+  content: text("content").notNull(), // JSON string with all content for this page
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ContentPage = typeof contentPages.$inferSelect;
+export type InsertContentPage = typeof contentPages.$inferInsert;

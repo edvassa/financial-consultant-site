@@ -184,8 +184,16 @@ export default function Dashboard() {
             </Button>
             <h1 className="text-2xl font-bold text-slate-900">Admin Dashboard</h1>
           </div>
-          <div className="text-sm text-slate-600">
-            Welcome, <strong>{user?.name}</strong>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setLocation("/content-manager")}
+              className="gap-2"
+            >
+              📝 Управление контентом
+            </Button>
+            <span className="text-sm text-slate-600">Welcome, {user?.name}</span>
           </div>
         </div>
       </header>

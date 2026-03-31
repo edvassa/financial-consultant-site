@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
+import ContentManager from "./pages/ContentManager";
 import BookConsultation from "./pages/BookConsultation";
 import AdminProducts from "./pages/AdminProducts";
 import Blog from "./pages/Blog";
@@ -18,6 +19,7 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/dashboard"} component={Dashboard} />
+      <Route path={"/content-manager"} component={ContentManager} />
       <Route path={"/book-consultation"} component={BookConsultation} />
       <Route path={"/admin/products"} component={AdminProducts} />
       <Route path={"/blog"} component={Blog} />
@@ -34,6 +36,9 @@ function Router() {
 // - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
 //   to keep consistent foreground/background color across components
 // - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
+// NOTE: Content Manager
+// - ContentManager page allows admins to edit all website text content
+// - Access via /content-manager route from the dashboard
 
 function App() {
   return (
