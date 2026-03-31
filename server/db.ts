@@ -1,6 +1,6 @@
 import { eq, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, products, orders, consultationBookings, blogArticles, blogSubscribers } from "../drizzle/schema";
+import { InsertUser, users, products, orders, consultationBookings, blogArticles, blogSubscribers, contentPages } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -214,6 +214,27 @@ export async function unsubscribeFromBlog(email: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return db.update(blogSubscribers).set({ subscribed: 0 }).where(eq(blogSubscribers.email, email));
+}
+
+// Content page queries
+export async function getContentPage(pageKey: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(contentPages).where(eq(contentPages.pageKey, pageKey)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function upsertContentPage(pageKey: string, content: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const existing = await db.select().from(contentPages).where(eq(contentPages.pageKey, pageKey)).limit(1);
+  
+  if (existing.length > 0) {
+    return db.update(contentPages).set({ content: JSON.stringify(content) }).where(eq(contentPages.pageKey, pageKey));
+  } else {
+    return db.insert(contentPages).values({ pageKey, content: JSON.stringify(content) });
+  }
 }
 
 // TODO: add feature queries here as your schema grows.

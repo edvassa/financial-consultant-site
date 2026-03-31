@@ -13,6 +13,7 @@ import ordersRouter from "../routes/orders";
 import consultationsRouter from "../routes/consultations";
 import blogRouter from "../routes/blog";
 import subscriptionRouter from "../routes/subscription";
+import fileUploadRouter from "../routes/fileUpload";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -53,6 +54,8 @@ async function startServer() {
   app.use("/api/blog", blogRouter);
   // Blog subscription API
   app.use("/api/subscription", subscriptionRouter);
+  // File upload API
+  app.use("/api", fileUploadRouter);
   // tRPC API
   app.use(
     "/api/trpc",

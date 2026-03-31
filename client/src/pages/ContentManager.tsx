@@ -39,7 +39,7 @@ const DEFAULT_CONTENT = {
   },
   final_cta: {
     section_title: "Готовы трансформировать ваш бизнес?",
-    subtitle: "Свяжитесь со мной, чтобы обсудить ваши финансовые потребности и найти идеальное решение для вашего бизнеса.",
+    subtitle: "Свяжитесь со мной, чтобы обсудить ваши финансовые потребства и найти идеальное решение для вашего бизнеса.",
     button_text: "Email: edvassa@gmail.com",
   },
   footer: {
@@ -71,6 +71,7 @@ export default function ContentManager() {
   const [selectedSection, setSelectedSection] = useState<string>("hero");
   const [formData, setFormData] = useState<Record<string, any>>(DEFAULT_CONTENT);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
 
   // Load content from database on mount
@@ -109,20 +110,36 @@ export default function ContentManager() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    setIsUploading(true);
     try {
-      // Convert file to base64 for storage
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const base64 = e.target?.result as string;
-        handleFieldChange("file_url", base64);
-        handleFieldChange("file_name", file.name);
-        handleFieldChange("file_type", file.type);
-        setSaveMessage("✅ Файл загружен!");
-        setTimeout(() => setSaveMessage(""), 3000);
-      };
-      reader.readAsDataURL(file);
+      // Create FormData for file upload
+      const formDataToSend = new FormData();
+      formDataToSend.append("file", file);
+
+      // Upload to server endpoint
+      const response = await fetch("/api/upload-content-file", {
+        method: "POST",
+        body: formDataToSend,
+      });
+
+      if (!response.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const data = await response.json();
+      
+      // Update form with file info
+      handleFieldChange("file_url", data.url);
+      handleFieldChange("file_name", file.name);
+      handleFieldChange("file_type", file.type);
+      setSaveMessage("✅ Файл загружен!");
+      setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
+      console.error("Upload error:", error);
       setSaveMessage("❌ Ошибка при загрузке файла");
+      setTimeout(() => setSaveMessage(""), 3000);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -141,6 +158,7 @@ export default function ContentManager() {
     } catch (error) {
       console.error("Save error:", error);
       setSaveMessage("❌ Ошибка при сохранении");
+      setTimeout(() => setSaveMessage(""), 3000);
     } finally {
       setIsSaving(false);
     }
@@ -223,6 +241,7 @@ export default function ContentManager() {
                                 type="file"
                                 accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                                 onChange={handleFileUpload}
+                                disabled={isUploading}
                                 className="flex-1"
                                 id="file-upload"
                               />
@@ -296,23 +315,17 @@ export default function ContentManager() {
                     <div className="flex gap-4 pt-6 border-t border-slate-200">
                       <Button
                         onClick={handleSave}
-                        disabled={isSaving || isLoading}
+                        disabled={isSaving || isLoading || isUploading}
                         className="bg-green-700 hover:bg-green-800 flex items-center gap-2"
                       >
-                        {isSaving || isLoading ? (
-                          <>Сохранение...</>
-                        ) : (
-                          <>
-                            <Save className="h-4 w-4" />
-                            Сохранить изменения
-                          </>
-                        )}
+                        <Save className="h-4 w-4" />
+                        {isSaving ? "Сохранение..." : "Сохранить изменения"}
                       </Button>
                       <Button
                         onClick={handleReset}
                         variant="outline"
-                        className="flex items-center gap-2"
                         disabled={isSaving}
+                        className="flex items-center gap-2"
                       >
                         <RotateCcw className="h-4 w-4" />
                         Отменить
