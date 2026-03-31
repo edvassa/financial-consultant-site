@@ -386,7 +386,8 @@ export default function Home() {
                 <p className="text-sm text-slate-600 mb-2">📎 Загруженный файл:</p>
                 <a
                   href={learnMoreContent.file_url}
-                  download={learnMoreContent.file_name}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-green-700 hover:text-green-800 font-medium underline"
                 >
                   {learnMoreContent.file_name}
