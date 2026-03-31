@@ -34,8 +34,14 @@ export default function Blog() {
       const response = await fetch("/api/blog");
       if (response.ok) {
         const data = await response.json();
-        setArticles(data);
-        setFilteredArticles(data);
+        // Sort articles by date - newest first
+        const sortedData = data.sort((a: BlogArticle, b: BlogArticle) => {
+          const dateA = new Date(a.createdAt).getTime();
+          const dateB = new Date(b.createdAt).getTime();
+          return dateB - dateA; // Newest first
+        });
+        setArticles(sortedData);
+        setFilteredArticles(sortedData);
       }
     } catch (error) {
       console.error("Error fetching articles:", error);
@@ -56,7 +62,13 @@ export default function Blog() {
       const response = await fetch(`/api/blog/search/${encodeURIComponent(query)}`);
       if (response.ok) {
         const data = await response.json();
-        setFilteredArticles(data);
+        // Sort search results by date - newest first
+        const sortedData = data.sort((a: BlogArticle, b: BlogArticle) => {
+          const dateA = new Date(a.createdAt).getTime();
+          const dateB = new Date(b.createdAt).getTime();
+          return dateB - dateA; // Newest first
+        });
+        setFilteredArticles(sortedData);
       }
     } catch (error) {
       console.error("Error searching articles:", error);
