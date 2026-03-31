@@ -4,6 +4,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { Save, RotateCcw, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { trpc } from "@/lib/trpc";
 
 // Default content structure matching the website
 const DEFAULT_CONTENT = {
@@ -72,17 +73,17 @@ export default function ContentManager() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
 
-  // Load content from localStorage on mount
+  // Load content from database on mount
+  const { data: dbContent, isLoading } = trpc.content.get.useQuery(
+    { pageKey: "home" },
+    { enabled: isAuthenticated }
+  );
+
   useEffect(() => {
-    try {
-      const savedContent = localStorage.getItem("siteContent");
-      if (savedContent) {
-        setFormData(JSON.parse(savedContent));
-      }
-    } catch (error) {
-      console.error("Error loading content:", error);
+    if (dbContent) {
+      setFormData(dbContent);
     }
-  }, []);
+  }, [dbContent]);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -125,12 +126,16 @@ export default function ContentManager() {
     }
   };
 
+  const saveContentMutation = trpc.content.upsert.useMutation();
+
   const handleSave = async () => {
     setIsSaving(true);
     setSaveMessage("");
     try {
-      // Save to localStorage
-      localStorage.setItem("siteContent", JSON.stringify(formData));
+      await saveContentMutation.mutateAsync({
+        pageKey: "home",
+        content: formData,
+      });
       setSaveMessage("✅ Изменения сохранены!");
       setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
@@ -291,10 +296,10 @@ export default function ContentManager() {
                     <div className="flex gap-4 pt-6 border-t border-slate-200">
                       <Button
                         onClick={handleSave}
-                        disabled={isSaving}
+                        disabled={isSaving || isLoading}
                         className="bg-green-700 hover:bg-green-800 flex items-center gap-2"
                       >
-                        {isSaving ? (
+                        {isSaving || isLoading ? (
                           <>Сохранение...</>
                         ) : (
                           <>

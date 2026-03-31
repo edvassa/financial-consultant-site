@@ -133,3 +133,10 @@
 - [ ] Create subscription form on services page
 - [ ] Implement email notifications using Manus built-in service
 - [ ] Test subscription functionality
+
+## Phase 15: Content Persistence Bug Fix
+- [x] Add tRPC procedures for content management (get/upsert)
+- [x] Update ContentManager to use database instead of localStorage
+- [x] Update Home.tsx to load content from database
+- [x] Verify content changes persist across sessions
+- [ ] Test "Learn More" PDF viewer functionality

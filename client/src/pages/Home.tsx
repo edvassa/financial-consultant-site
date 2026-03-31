@@ -7,6 +7,7 @@ import { useLocation } from "wouter";
 import FeaturedBlog from "@/components/FeaturedBlog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
 
 // Consultant photo URL (cleaned version)
 const CONSULTANT_PHOTO = "https://d2xsxph8kpxj0f.cloudfront.net/310419663030588662/Cp4PZg8zcaAboFkhLCd7R5/elena_clean_portrait_331f0015.png";
@@ -83,7 +84,7 @@ const BENEFITS = [
   {
     icon: Globe,
     title: "Полная финансовая прозрачность",
-    description: "Всегда вы увидите, куда идут деньги и что приносит максимальную прибыль. Я внедряю P&L, Cash Flow и Balance, понятные даже не-финансистам.",
+    description: "Всегда вы увидите, куда идят деньги и что приносит максимальную прибыль. Я внедряю P&L, Cash Flow и Balance, понятные даже не-финансистам.",
   },
   {
     icon: TrendingUp,
@@ -110,32 +111,21 @@ export default function Home() {
     file_type: "",
   });
 
-  // Load content from localStorage on mount
+  // Load content from database
+  const { data: dbContent } = trpc.content.get.useQuery(
+    { pageKey: "home" },
+    { retry: 1 }
+  );
+
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("siteContent");
-      if (saved) {
-        const data = JSON.parse(saved);
-        if (data.learn_more) {
-          setLearnMoreContent(data.learn_more);
-        }
-      }
-    } catch (error) {
-      console.error("Error loading content:", error);
+    if (dbContent && dbContent.learn_more) {
+      setLearnMoreContent(dbContent.learn_more);
     }
-  }, []);
+  }, [dbContent]);
 
   const loadLearnMoreContent = () => {
-    try {
-      const saved = localStorage.getItem("siteContent");
-      if (saved) {
-        const data = JSON.parse(saved);
-        if (data.learn_more) {
-          setLearnMoreContent(data.learn_more);
-        }
-      }
-    } catch (error) {
-      console.error("Error loading content:", error);
+    if (dbContent && dbContent.learn_more) {
+      setLearnMoreContent(dbContent.learn_more);
     }
   };
 
@@ -171,10 +161,10 @@ export default function Home() {
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div>
             <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
-              Ваш личный финансовый директор онлайн
+              {dbContent?.hero?.title || "Ваш личный финансовый директор онлайн"}
             </h1>
             <p className="text-xl text-slate-600 mb-8">
-              Профессиональные инструменты уровня CFO: готовые решения (шаблоны, обучающие материалы) и индивидуальная работа (приватные консультации, поддержка бизнеса). Быстрое внедрение, точные расчеты, прозрачная финансовая система.
+              {dbContent?.hero?.subtitle || "Профессиональные инструменты уровня CFO: готовые решения (шаблоны, обучающие материалы) и индивидуальная работа (приватные консультации, поддержка бизнеса). Быстрое внедрение, точные расчеты, прозрачная финансовая система."}
             </p>
             <div className="flex gap-4">
               <Button
@@ -213,12 +203,12 @@ export default function Home() {
       <section className="bg-slate-900 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
-            <h2 className="text-3xl font-bold mb-6">Обо мне</h2>
+            <h2 className="text-3xl font-bold mb-6">{dbContent?.about?.section_title || "Обо мне"}</h2>
             <p className="text-lg text-slate-300 mb-4">
-              Меня зовут Елена Цуркан и мой личный опыт в стратегическом финансовом управлении превышает 15 лет, что позволяет мне превратить финансовый хаос в прозрачную и прибыльную систему. Я предлагаю комплексный подход: от готовых инструментов уровня CFO до индивидуальных консультаций и полной поддержки бизнеса.
+              {dbContent?.about?.paragraph_1 || "Меня зовут Елена Цуркан и мой личный опыт в стратегическом финансовом управлении превышает 15 лет, что позволяет мне превратить финансовый хаос в прозрачную и прибыльную систему. Я предлагаю комплексный подход: от готовых инструментов уровня CFO до индивидуальных консультаций и полной поддержки бизнеса."}
             </p>
             <p className="text-lg text-slate-300">
-              Со мной вы получаете не просто отчетность, а стратегический инструмент для многократного роста прибыли и полного финансового контроля.
+              {dbContent?.about?.paragraph_2 || "Со мной вы получаете не просто отчетность, а стратегический инструмент для многократного роста прибыли и полного финансового контроля."}
             </p>
           </div>
         </div>
@@ -226,7 +216,7 @@ export default function Home() {
 
       {/* Benefits Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <h2 className="text-3xl font-bold text-slate-900 mb-12 text-center">Почему работать со мной</h2>
+        <h2 className="text-3xl font-bold text-slate-900 mb-12 text-center">{dbContent?.benefits?.section_title || "Почему работать со мной"}</h2>
         <div className="grid md:grid-cols-3 gap-8">
           {BENEFITS.map((benefit, index) => {
             const Icon = benefit.icon;
@@ -274,7 +264,7 @@ export default function Home() {
               onClick={() => setSelectedCategory("service")}
               className={selectedCategory === "service" ? "bg-green-700 hover:bg-green-800" : ""}
             >
-              Консультационные услуги
+              Услуги консультирования
             </Button>
             <Button
               variant={selectedCategory === "subscription" ? "default" : "outline"}
@@ -286,43 +276,26 @@ export default function Home() {
           </div>
 
           {/* Products Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
               <Card key={product.id} className="border-slate-200 hover:shadow-lg transition-shadow">
                 <CardHeader>
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <CardTitle className="text-slate-900">{product.name}</CardTitle>
-                      <CardDescription>{product.description}</CardDescription>
-                    </div>
-                  </div>
+                  <CardTitle className="text-lg text-slate-900">{product.name}</CardTitle>
+                  {product.price && (
+                    <CardDescription className="text-green-700 font-semibold">
+                      ${product.price}
+                    </CardDescription>
+                  )}
                 </CardHeader>
                 <CardContent>
-                  <p className="text-slate-600 text-sm mb-6">{product.details}</p>
-                  <div className="flex justify-between items-center">
-                    {product.showPrice !== false && product.price && (
-                      <div className="text-2xl font-bold text-green-700">
-                        {product.price.toLocaleString()} MDL
-                        {(product as any).isMonthly && <span className="text-sm font-normal text-slate-600">/месяц</span>}
-                      </div>
-                    )}
-                    <Button 
-                      size="sm" 
-                      className="bg-green-700 hover:bg-green-800"
-                      onClick={() => {
-                        if (product.id === 1) {
-                          // Book - scroll to payment section
-                          const paymentSection = document.querySelector('[data-payment-section]');
-                          paymentSection?.scrollIntoView({ behavior: 'smooth' });
-                        } else {
-                          // Other services - go to consultation form
-                          setLocation("/book-consultation");
-                        }
-                      }}
-                    >
-                      {product.id === 1 ? "ОПЛАТИТЬ" : "Оставить заявку"}
-                    </Button>
-                  </div>
+                  <p className="text-slate-600 text-sm mb-4">{product.description}</p>
+                  <Button
+                    size="sm"
+                    className="w-full bg-green-700 hover:bg-green-800"
+                    onClick={() => setLocation("/book-consultation")}
+                  >
+                    Узнать подробнее
+                  </Button>
                 </CardContent>
               </Card>
             ))}
@@ -330,116 +303,106 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Payment Information Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16" data-payment-section>
-        <Card className="border-slate-200 bg-slate-50">
+      {/* Payment Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <Card className="border-slate-200">
           <CardHeader>
-            <CardTitle className="text-slate-900">Реквизиты для оплаты</CardTitle>
-            <CardDescription>Информация для банковского перевода</CardDescription>
+            <CardTitle className="text-2xl">{dbContent?.payment?.section_title || "Реквизиты для оплаты"}</CardTitle>
+            <CardDescription>{dbContent?.payment?.subtitle || "Информация для банковского перевода"}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-8">
               <div>
-                <p className="text-sm text-slate-600 font-semibold">IBAN</p>
-                <p className="text-lg font-mono text-slate-900">MD93ML022510000000007084</p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-600 font-semibold">Получатель</p>
-                <p className="text-slate-900">ELVIAN TRADE PLUS S.R.L.</p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-600 font-semibold">Налоговый код</p>
-                <p className="text-slate-900">1025600070087</p>
+                <p className="text-sm text-slate-600 mb-2">IBAN</p>
+                <p className="text-lg font-mono text-slate-900 mb-6">{dbContent?.payment?.iban || "MD93ML022510000000007084"}</p>
+                
+                <p className="text-sm text-slate-600 mb-2">Получатель</p>
+                <p className="text-lg font-semibold text-slate-900 mb-6">{dbContent?.payment?.recipient || "ELVIAN TRADE PLUS S.R.L."}</p>
               </div>
               <div>
-                <p className="text-sm text-slate-600 font-semibold">Валюта</p>
-                <p className="text-slate-900">MDL (Молдавский лей)</p>
+                <p className="text-sm text-slate-600 mb-2">Налоговый код</p>
+                <p className="text-lg font-mono text-slate-900 mb-6">{dbContent?.payment?.tax_code || "1025600070087"}</p>
+                
+                <p className="text-sm text-slate-600 mb-2">Валюта</p>
+                <p className="text-lg font-semibold text-slate-900 mb-6">{dbContent?.payment?.currency || "MDL (Молдавский лей)"}</p>
               </div>
-              <div className="pt-4 border-t border-slate-200">
-                <p className="text-sm text-slate-600">
-                  После оплаты пожалуйста отправьте подтверждение на <strong>edvassa@gmail.com</strong> с деталями вашего заказа.
-                </p>
-              </div>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+              <p className="text-sm text-blue-900">
+                {dbContent?.payment?.note || "После оплаты пожалуйста отправьте подтверждение на edvassa@gmail.com с деталями вашего заказа."}
+              </p>
             </div>
           </CardContent>
         </Card>
       </section>
 
-      {/* Featured Blog Section */}
-      <FeaturedBlog />
-
-      {/* Contact Section */}
+      {/* Final CTA Section */}
       <section className="bg-green-700 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-6">Готовы трансформировать ваш бизнес?</h2>
-          <p className="text-lg mb-8 max-w-2xl mx-auto">
-            Свяжитесь со мной, чтобы обсудить ваши финансовые потребности и найти идеальное решение для вашего бизнеса.
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl font-bold mb-4">{dbContent?.final_cta?.section_title || "Готовы трансформировать ваш бизнес?"}</h2>
+          <p className="text-lg text-green-100 mb-8">
+            {dbContent?.final_cta?.subtitle || "Свяжитесь со мной, чтобы обсудить ваши финансовые потребности и найти идеальное решение для вашего бизнеса."}
           </p>
-          <div className="flex justify-center">
-            <a href="mailto:edvassa@gmail.com">
-              <Button size="lg" variant="secondary">
-                Email: edvassa@gmail.com
-              </Button>
-            </a>
-          </div>
+          <Button
+            size="lg"
+            className="bg-white text-green-700 hover:bg-slate-100"
+            onClick={() => window.location.href = `mailto:edvassa@gmail.com`}
+          >
+            {dbContent?.final_cta?.button_text || "Email: edvassa@gmail.com"}
+          </Button>
         </div>
       </section>
 
+      {/* Footer */}
+      <footer className="bg-slate-900 text-slate-300 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <p className="text-sm">{dbContent?.footer?.copyright || "© 2026 FinDirector. Все права защищены."}</p>
+            <p className="text-sm">{dbContent?.footer?.author || "Елена Цуркан - Финансовый консультант"}</p>
+          </div>
+        </div>
+      </footer>
+
       {/* Learn More Modal */}
       <Dialog open={showLearnMore} onOpenChange={setShowLearnMore}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{learnMoreContent.title}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {learnMoreContent.content && (
-              <div className="prose prose-sm max-w-none">
-                <p className="text-slate-700 whitespace-pre-wrap">{learnMoreContent.content}</p>
-              </div>
-            )}
-            {learnMoreContent.file_name && learnMoreContent.file_url && (
-              <div className="mt-4 p-4 bg-green-50 rounded-lg">
-                <p className="text-sm text-slate-600 mb-2">📎 Загруженный файл:</p>
-                {learnMoreContent.file_type?.includes('pdf') ? (
-                  <iframe
-                    src={learnMoreContent.file_url}
-                    className="w-full h-96 rounded-lg border border-slate-300"
-                    title={learnMoreContent.file_name}
-                  />
-                ) : learnMoreContent.file_type?.includes('image') ? (
+            {learnMoreContent.file_url && (
+              <div className="w-full">
+                {learnMoreContent.file_type?.startsWith("image/") ? (
                   <img
                     src={learnMoreContent.file_url}
                     alt={learnMoreContent.file_name}
-                    className="max-w-full h-auto rounded-lg"
+                    className="w-full h-auto rounded-lg"
+                  />
+                ) : learnMoreContent.file_type === "application/pdf" ? (
+                  <iframe
+                    src={learnMoreContent.file_url}
+                    className="w-full h-[600px] rounded-lg border border-slate-200"
+                    title={learnMoreContent.file_name}
                   />
                 ) : (
                   <a
                     href={learnMoreContent.file_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-green-700 hover:text-green-800 font-medium underline"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800"
                   >
-                    {learnMoreContent.file_name}
+                    <CheckCircle2 className="h-4 w-4" />
+                    Открыть {learnMoreContent.file_name}
                   </a>
                 )}
               </div>
             )}
-            {!learnMoreContent.content && !learnMoreContent.file_name && (
-              <p className="text-slate-500 italic">Информация будет доступна вскоре...</p>
+            {learnMoreContent.content && (
+              <p className="text-slate-700 whitespace-pre-wrap">{learnMoreContent.content}</p>
             )}
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Footer */}
-      <footer className="bg-slate-900 text-slate-400 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center">
-            <p>&copy; 2026 FinDirector. Все права защищены.</p>
-            <p>Елена Цуркан - Финансовый консультант</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
