@@ -316,7 +316,7 @@ export default function Home() {
                 <CardContent>
                   <div className="space-y-4">
                     {product.price && (
-                      <div className="text-2xl font-bold text-green-700">${product.price}</div>
+                      <div className="text-2xl font-bold text-green-700">{product.price} MDL</div>
                     )}
                     <Button
                       className="w-full bg-green-700 hover:bg-green-800"
