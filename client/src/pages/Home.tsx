@@ -1,4 +1,3 @@
-import { getLoginUrl } from "@/const";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, CheckCircle2, Globe, TrendingUp, Shield } from "lucide-react";
@@ -8,6 +7,7 @@ import FeaturedBlog from "@/components/FeaturedBlog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
+import { getLoginUrl } from "@/const";
 
 // Consultant photo URL (cleaned version)
 const CONSULTANT_PHOTO = "https://d2xsxph8kpxj0f.cloudfront.net/310419663030588662/Cp4PZg8zcaAboFkhLCd7R5/elena_clean_portrait_331f0015.png";
@@ -80,23 +80,12 @@ const PRODUCTS = [
   },
 ];
 
-const BENEFITS = [
-  {
-    icon: Globe,
-    title: "Полная финансовая прозрачность",
-    description: "Всегда вы увидите, куда идят деньги и что приносит максимальную прибыль. Я внедряю P&L, Cash Flow и Balance, понятные даже не-финансистам.",
-  },
-  {
-    icon: TrendingUp,
-    title: "Фокус на рост прибыли",
-    description: "Я не просто считаю, я анализирую и нахожу точки роста. Мои инструменты позволяют принимать решения, которые увеличивают прибыльность бизнеса.",
-  },
-  {
-    icon: Shield,
-    title: "Управление рисками",
-    description: "Вы увидите потенциальные кассовые разрывы и финансовые угрозы заранее. Я строю предсказуемую финансовую модель, защищая ваш бизнес от неожиданностей.",
-  },
-];
+// Icon mapping for benefits
+const ICON_MAP: Record<string, any> = {
+  "globe": Globe,
+  "trending": TrendingUp,
+  "shield": Shield,
+};
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
@@ -112,7 +101,7 @@ export default function Home() {
   });
 
   // Load content from database
-  const { data: dbContent } = trpc.content.get.useQuery(
+  const { data: dbContent, isLoading } = trpc.content.get.useQuery(
     { pageKey: "home" },
     { retry: 1 }
   );
@@ -132,6 +121,41 @@ export default function Home() {
   const filteredProducts = selectedCategory
     ? PRODUCTS.filter((p) => p.category === selectedCategory)
     : PRODUCTS;
+
+  // Build benefits from database content
+  const getBenefits = () => {
+    if (!dbContent?.benefits) return [];
+    
+    const benefits = [];
+    
+    if (dbContent.benefits.benefit_1_title) {
+      benefits.push({
+        icon: Globe,
+        title: dbContent.benefits.benefit_1_title,
+        description: dbContent.benefits.benefit_1_desc,
+      });
+    }
+    
+    if (dbContent.benefits.benefit_2_title) {
+      benefits.push({
+        icon: TrendingUp,
+        title: dbContent.benefits.benefit_2_title,
+        description: dbContent.benefits.benefit_2_desc,
+      });
+    }
+    
+    if (dbContent.benefits.benefit_3_title) {
+      benefits.push({
+        icon: Shield,
+        title: dbContent.benefits.benefit_3_title,
+        description: dbContent.benefits.benefit_3_desc,
+      });
+    }
+    
+    return benefits;
+  };
+
+  const benefits = getBenefits();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
@@ -172,7 +196,7 @@ export default function Home() {
                 className="bg-green-700 hover:bg-green-800"
                 onClick={() => setLocation("/book-consultation")}
               >
-                Забронировать консультацию <ArrowRight className="ml-2 h-5 w-5" />
+                {dbContent?.hero?.cta_primary || "Забронировать консультацию"} <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button
                 size="lg"
@@ -182,7 +206,7 @@ export default function Home() {
                   setShowLearnMore(true);
                 }}
               >
-                Узнать больше
+                {dbContent?.hero?.cta_secondary || "Узнать больше"}
               </Button>
             </div>
           </div>
@@ -218,20 +242,26 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <h2 className="text-3xl font-bold text-slate-900 mb-12 text-center">{dbContent?.benefits?.section_title || "Почему работать со мной"}</h2>
         <div className="grid md:grid-cols-3 gap-8">
-          {BENEFITS.map((benefit, index) => {
-            const Icon = benefit.icon;
-            return (
-              <Card key={index} className="border-slate-200">
-                <CardHeader>
-                  <Icon className="h-8 w-8 text-green-700 mb-4" />
-                  <CardTitle className="text-slate-900">{benefit.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-slate-600">{benefit.description}</p>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {benefits.length > 0 ? (
+            benefits.map((benefit, index) => {
+              const Icon = benefit.icon;
+              return (
+                <Card key={index} className="border-slate-200">
+                  <CardHeader>
+                    <Icon className="h-8 w-8 text-green-700 mb-4" />
+                    <CardTitle className="text-slate-900">{benefit.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-slate-600">{benefit.description}</p>
+                  </CardContent>
+                </Card>
+              );
+            })
+          ) : (
+            <div className="col-span-3 text-center text-slate-600">
+              Контент загружается...
+            </div>
+          )}
         </div>
       </section>
 
@@ -264,38 +294,37 @@ export default function Home() {
               onClick={() => setSelectedCategory("service")}
               className={selectedCategory === "service" ? "bg-green-700 hover:bg-green-800" : ""}
             >
-              Услуги консультирования
+              Услуги
             </Button>
             <Button
               variant={selectedCategory === "subscription" ? "default" : "outline"}
               onClick={() => setSelectedCategory("subscription")}
               className={selectedCategory === "subscription" ? "bg-green-700 hover:bg-green-800" : ""}
             >
-              Подписки
+              Подписка
             </Button>
           </div>
 
           {/* Products Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
-              <Card key={product.id} className="border-slate-200 hover:shadow-lg transition-shadow">
+              <Card key={product.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
-                  <CardTitle className="text-lg text-slate-900">{product.name}</CardTitle>
-                  {product.price && (
-                    <CardDescription className="text-green-700 font-semibold">
-                      ${product.price}
-                    </CardDescription>
-                  )}
+                  <CardTitle className="text-lg">{product.name}</CardTitle>
+                  <CardDescription>{product.description}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-slate-600 text-sm mb-4">{product.description}</p>
-                  <Button
-                    size="sm"
-                    className="w-full bg-green-700 hover:bg-green-800"
-                    onClick={() => setLocation("/book-consultation")}
-                  >
-                    Узнать подробнее
-                  </Button>
+                  <div className="space-y-4">
+                    {product.price && (
+                      <div className="text-2xl font-bold text-green-700">${product.price}</div>
+                    )}
+                    <Button
+                      className="w-full bg-green-700 hover:bg-green-800"
+                      onClick={() => setLocation(`/book-consultation?product=${product.id}`)}
+                    >
+                      Подробнее
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -303,50 +332,19 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Payment Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <Card className="border-slate-200">
-          <CardHeader>
-            <CardTitle className="text-2xl">{dbContent?.payment?.section_title || "Реквизиты для оплаты"}</CardTitle>
-            <CardDescription>{dbContent?.payment?.subtitle || "Информация для банковского перевода"}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div>
-                <p className="text-sm text-slate-600 mb-2">IBAN</p>
-                <p className="text-lg font-mono text-slate-900 mb-6">{dbContent?.payment?.iban || "MD93ML022510000000007084"}</p>
-                
-                <p className="text-sm text-slate-600 mb-2">Получатель</p>
-                <p className="text-lg font-semibold text-slate-900 mb-6">{dbContent?.payment?.recipient || "ELVIAN TRADE PLUS S.R.L."}</p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-600 mb-2">Налоговый код</p>
-                <p className="text-lg font-mono text-slate-900 mb-6">{dbContent?.payment?.tax_code || "1025600070087"}</p>
-                
-                <p className="text-sm text-slate-600 mb-2">Валюта</p>
-                <p className="text-lg font-semibold text-slate-900 mb-6">{dbContent?.payment?.currency || "MDL (Молдавский лей)"}</p>
-              </div>
-            </div>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
-              <p className="text-sm text-blue-900">
-                {dbContent?.payment?.note || "После оплаты пожалуйста отправьте подтверждение на edvassa@gmail.com с деталями вашего заказа."}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
       {/* Final CTA Section */}
       <section className="bg-green-700 text-white py-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-4">{dbContent?.final_cta?.section_title || "Готовы трансформировать ваш бизнес?"}</h2>
-          <p className="text-lg text-green-100 mb-8">
-            {dbContent?.final_cta?.subtitle || "Свяжитесь со мной, чтобы обсудить ваши финансовые потребности и найти идеальное решение для вашего бизнеса."}
+          <h2 className="text-3xl font-bold mb-4">
+            {dbContent?.final_cta?.section_title || "Готовы трансформировать ваш бизнес?"}
+          </h2>
+          <p className="text-lg mb-8 text-green-100">
+            {dbContent?.final_cta?.subtitle || "Свяжитесь со мной, чтобы обсудить ваши финансовые потребства и найти идеальное решение для вашего бизнеса."}
           </p>
           <Button
             size="lg"
             className="bg-white text-green-700 hover:bg-slate-100"
-            onClick={() => window.location.href = `mailto:edvassa@gmail.com`}
+            onClick={() => setLocation("/book-consultation")}
           >
             {dbContent?.final_cta?.button_text || "Email: edvassa@gmail.com"}
           </Button>
@@ -354,51 +352,60 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-slate-300 py-8">
+      <footer className="bg-slate-900 text-slate-300 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm">{dbContent?.footer?.copyright || "© 2026 FinDirector. Все права защищены."}</p>
-            <p className="text-sm">{dbContent?.footer?.author || "Елена Цуркан - Финансовый консультант"}</p>
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <h3 className="text-white font-bold mb-4">FinDirector</h3>
+              <p className="text-sm">{dbContent?.footer?.author || "Елена Цуркан - Финансовый консультант"}</p>
+            </div>
+            <div>
+              <h4 className="text-white font-bold mb-4">Быстрые ссылки</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="hover:text-white">Главная</a></li>
+                <li><a href="#" className="hover:text-white">Услуги</a></li>
+                <li><a href="#" className="hover:text-white">Блог</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-bold mb-4">Контакты</h4>
+              <ul className="space-y-2 text-sm">
+                <li>Email: edvassa@gmail.com</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-bold mb-4">Реквизиты</h4>
+              <p className="text-sm">{dbContent?.payment?.iban || "MD93ML022510000000007084"}</p>
+            </div>
+          </div>
+          <div className="border-t border-slate-700 pt-8 text-center text-sm">
+            <p>{dbContent?.footer?.copyright || "© 2026 FinDirector. Все права защищены."}</p>
           </div>
         </div>
       </footer>
 
       {/* Learn More Modal */}
       <Dialog open={showLearnMore} onOpenChange={setShowLearnMore}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{learnMoreContent.title}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            {learnMoreContent.file_url && (
-              <div className="w-full">
-                {learnMoreContent.file_type?.startsWith("image/") ? (
-                  <img
-                    src={learnMoreContent.file_url}
-                    alt={learnMoreContent.file_name}
-                    className="w-full h-auto rounded-lg"
-                  />
-                ) : learnMoreContent.file_type === "application/pdf" ? (
-                  <iframe
-                    src={learnMoreContent.file_url}
-                    className="w-full h-[600px] rounded-lg border border-slate-200"
-                    title={learnMoreContent.file_name}
-                  />
-                ) : (
-                  <a
-                    href={learnMoreContent.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-800"
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                    Открыть {learnMoreContent.file_name}
-                  </a>
-                )}
-              </div>
-            )}
+          <div className="mt-4 space-y-4">
             {learnMoreContent.content && (
-              <p className="text-slate-700 whitespace-pre-wrap">{learnMoreContent.content}</p>
+              <p className="text-slate-700">{learnMoreContent.content}</p>
+            )}
+            {learnMoreContent.file_url && (
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-sm text-slate-600 mb-2">Загруженный файл:</p>
+                <a
+                  href={learnMoreContent.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-green-700 hover:text-green-800 font-medium"
+                >
+                  📄 {learnMoreContent.file_name}
+                </a>
+              </div>
             )}
           </div>
         </DialogContent>
