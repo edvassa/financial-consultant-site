@@ -119,11 +119,11 @@ export default function BlogArticle() {
       <div className="max-w-3xl mx-auto px-4 py-12">
         {/* Article Image */}
         {article.imageUrl && (
-          <div className="mb-8 rounded-lg overflow-hidden">
+          <div className="mb-8 rounded-lg overflow-hidden shadow-lg">
             <img
               src={article.imageUrl}
               alt={article.title}
-              className="w-full h-96 object-cover"
+              className="w-full h-auto object-contain max-h-96"
             />
           </div>
         )}

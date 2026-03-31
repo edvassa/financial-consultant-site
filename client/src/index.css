@@ -174,4 +174,12 @@
       max-width: 1280px; /* Standard content width */
     }
   }
+
+  .prose img {
+    @apply w-full h-auto rounded-lg shadow-md my-6;
+  }
+
+  .prose p {
+    @apply mb-4 text-slate-700;
+  }
 }
