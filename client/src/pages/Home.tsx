@@ -1,12 +1,12 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, CheckCircle2, Globe, TrendingUp, Shield } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import FeaturedBlog from "@/components/FeaturedBlog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 // Consultant photo URL (cleaned version)
 const CONSULTANT_PHOTO = "https://d2xsxph8kpxj0f.cloudfront.net/310419663030588662/Cp4PZg8zcaAboFkhLCd7R5/elena_clean_portrait_331f0015.png";
@@ -107,7 +107,23 @@ export default function Home() {
     content: "",
     file_name: "",
     file_url: "",
+    file_type: "",
   });
+
+  // Load content from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("siteContent");
+      if (saved) {
+        const data = JSON.parse(saved);
+        if (data.learn_more) {
+          setLearnMoreContent(data.learn_more);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading content:", error);
+    }
+  }, []);
 
   const loadLearnMoreContent = () => {
     try {
@@ -381,17 +397,31 @@ export default function Home() {
                 <p className="text-slate-700 whitespace-pre-wrap">{learnMoreContent.content}</p>
               </div>
             )}
-            {learnMoreContent.file_name && (
+            {learnMoreContent.file_name && learnMoreContent.file_url && (
               <div className="mt-4 p-4 bg-green-50 rounded-lg">
                 <p className="text-sm text-slate-600 mb-2">📎 Загруженный файл:</p>
-                <a
-                  href={learnMoreContent.file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-green-700 hover:text-green-800 font-medium underline"
-                >
-                  {learnMoreContent.file_name}
-                </a>
+                {learnMoreContent.file_type?.includes('pdf') ? (
+                  <iframe
+                    src={learnMoreContent.file_url}
+                    className="w-full h-96 rounded-lg border border-slate-300"
+                    title={learnMoreContent.file_name}
+                  />
+                ) : learnMoreContent.file_type?.includes('image') ? (
+                  <img
+                    src={learnMoreContent.file_url}
+                    alt={learnMoreContent.file_name}
+                    className="max-w-full h-auto rounded-lg"
+                  />
+                ) : (
+                  <a
+                    href={learnMoreContent.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-green-700 hover:text-green-800 font-medium underline"
+                  >
+                    {learnMoreContent.file_name}
+                  </a>
+                )}
               </div>
             )}
             {!learnMoreContent.content && !learnMoreContent.file_name && (

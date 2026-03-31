@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { Save, RotateCcw, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 // Default content structure matching the website
 const DEFAULT_CONTENT = {
@@ -49,6 +49,8 @@ const DEFAULT_CONTENT = {
     title: "Узнайте больше",
     content: "",
     file_name: "",
+    file_url: "",
+    file_type: "",
   },
 };
 
@@ -69,6 +71,18 @@ export default function ContentManager() {
   const [formData, setFormData] = useState<Record<string, any>>(DEFAULT_CONTENT);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
+
+  // Load content from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedContent = localStorage.getItem("siteContent");
+      if (savedContent) {
+        setFormData(JSON.parse(savedContent));
+      }
+    } catch (error) {
+      console.error("Error loading content:", error);
+    }
+  }, []);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -95,12 +109,17 @@ export default function ContentManager() {
     if (!file) return;
 
     try {
-      // Create a simple file URL for demo
-      const fileUrl = URL.createObjectURL(file);
-      handleFieldChange("file_url", fileUrl);
-      handleFieldChange("file_name", file.name);
-      setSaveMessage("✅ Файл загружен!");
-      setTimeout(() => setSaveMessage(""), 3000);
+      // Convert file to base64 for storage
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = e.target?.result as string;
+        handleFieldChange("file_url", base64);
+        handleFieldChange("file_name", file.name);
+        handleFieldChange("file_type", file.type);
+        setSaveMessage("✅ Файл загружен!");
+        setTimeout(() => setSaveMessage(""), 3000);
+      };
+      reader.readAsDataURL(file);
     } catch (error) {
       setSaveMessage("❌ Ошибка при загрузке файла");
     }
@@ -110,7 +129,7 @@ export default function ContentManager() {
     setIsSaving(true);
     setSaveMessage("");
     try {
-      // Save to localStorage for demo
+      // Save to localStorage
       localStorage.setItem("siteContent", JSON.stringify(formData));
       setSaveMessage("✅ Изменения сохранены!");
       setTimeout(() => setSaveMessage(""), 3000);
@@ -127,6 +146,7 @@ export default function ContentManager() {
       ...prev,
       [selectedSection]: DEFAULT_CONTENT[selectedSection as keyof typeof DEFAULT_CONTENT],
     }));
+    setSaveMessage("");
   };
 
   return (
@@ -181,7 +201,7 @@ export default function ContentManager() {
                 <CardContent>
                   <div className="space-y-6">
                     {Object.entries(sectionData).map(([key, value]: [string, any]) => {
-                      if (key === "file_url") return null;
+                      if (key === "file_url" || key === "file_type") return null;
                       
                       const label = key
                         .replace(/_/g, " ")
@@ -211,6 +231,7 @@ export default function ContentManager() {
                                     onClick={() => {
                                       handleFieldChange("file_url", "");
                                       handleFieldChange("file_name", "");
+                                      handleFieldChange("file_type", "");
                                     }}
                                     className="text-green-700 hover:text-green-900"
                                   >
