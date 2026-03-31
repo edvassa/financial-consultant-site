@@ -231,6 +231,14 @@ export default function Dashboard() {
                           <Button
                             variant="ghost"
                             size="sm"
+                            onClick={() => handleEditProduct(product)}
+                            className="text-blue-600 hover:text-blue-700"
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleToggleProduct(product.id, product.isActive)}
                           >
                             {product.isActive ? (
@@ -251,7 +259,66 @@ export default function Dashboard() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-3">
+                      {editingId === product.id ? (
+                        <div className="space-y-4 p-4 bg-slate-50 rounded-lg">
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                            <input
+                              type="text"
+                              value={editForm.name || ""}
+                              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                              className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Price (MDL)</label>
+                            <input
+                              type="number"
+                              value={editForm.price || ""}
+                              onChange={(e) => setEditForm({ ...editForm, price: Number(e.target.value) })}
+                              className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                            <textarea
+                              value={editForm.description || ""}
+                              onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                              className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                              rows={3}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Full Details</label>
+                            <textarea
+                              value={editForm.details || ""}
+                              onChange={(e) => setEditForm({ ...editForm, details: e.target.value })}
+                              className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                              rows={5}
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={handleSaveProduct}
+                              className="bg-green-700 hover:bg-green-800"
+                              size="sm"
+                            >
+                              Save
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                setEditingId(null);
+                                setEditForm({});
+                              }}
+                              variant="outline"
+                              size="sm"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
                         {product.fileUrl ? (
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 text-sm text-slate-600">
@@ -296,7 +363,20 @@ export default function Dashboard() {
                         <p className="text-xs text-slate-500">
                           Created: {new Date(product.createdAt).toLocaleDateString()}
                         </p>
+                        {product.description && (
+                          <div className="mt-3 pt-3 border-t border-slate-200">
+                            <p className="text-xs font-semibold text-slate-700 mb-1">Description:</p>
+                            <p className="text-sm text-slate-600">{product.description}</p>
+                          </div>
+                        )}
+                        {product.details && (
+                          <div className="mt-3 pt-3 border-t border-slate-200">
+                            <p className="text-xs font-semibold text-slate-700 mb-1">Details:</p>
+                            <p className="text-sm text-slate-600">{product.details}</p>
+                          </div>
+                        )}
                       </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))
