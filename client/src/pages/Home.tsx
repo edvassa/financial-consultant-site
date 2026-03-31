@@ -1,4 +1,5 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, CheckCircle2, Globe, TrendingUp, Shield } from "lucide-react";
@@ -81,7 +82,7 @@ const BENEFITS = [
   {
     icon: Globe,
     title: "Полная финансовая прозрачность",
-    description: "Всегда видьте, куда идут деньги и что приносит максимальную прибыль. Я внедряю P&L, Cash Flow и Balance, понятные даже не-финансистам.",
+    description: "Всегда вы увидите, куда идут деньги и что приносит максимальную прибыль. Я внедряю P&L, Cash Flow и Balance, понятные даже не-финансистам.",
   },
   {
     icon: TrendingUp,
@@ -91,7 +92,7 @@ const BENEFITS = [
   {
     icon: Shield,
     title: "Управление рисками",
-    description: "Видьте потенциальные кассовые разрывы и финансовые угрозы заранее. Я строю предсказуемую финансовую модель, защищая ваш бизнес от неожиданностей.",
+    description: "Вы увидите потенциальные кассовые разрывы и финансовые угрозы заранее. Я строю предсказуемую финансовую модель, защищая ваш бизнес от неожиданностей.",
   },
 ];
 
@@ -119,9 +120,9 @@ export default function Home() {
               Блог
             </Button>
             {isAuthenticated ? (
-              <Button variant="outline">Панель управления</Button>
+              <Button variant="outline" onClick={() => setLocation("/dashboard")}>Панель управления</Button>
             ) : (
-              <Button variant="default">Связаться со мной</Button>
+              <Button variant="default" onClick={() => window.location.href = getLoginUrl()}>Связаться со мной</Button>
             )}
           </div>
         </div>
