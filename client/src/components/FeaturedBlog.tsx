@@ -31,7 +31,14 @@ export default function FeaturedBlog() {
       const response = await fetch("/api/blog");
       if (response.ok) {
         const data = await response.json();
-        setArticles(data.slice(0, 3));
+        // Sort articles by date - newest first
+        const sortedData = data.sort((a: BlogArticle, b: BlogArticle) => {
+          const dateA = new Date(a.createdAt).getTime();
+          const dateB = new Date(b.createdAt).getTime();
+          return dateB - dateA; // Newest first
+        });
+        // Take only the first 3 articles
+        setArticles(sortedData.slice(0, 3));
       }
     } catch (error) {
       console.error("Error fetching blog articles:", error);
