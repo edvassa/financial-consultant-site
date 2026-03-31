@@ -91,14 +91,7 @@ export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [showLearnMore, setShowLearnMore] = useState(false);
-  const [learnMoreContent, setLearnMoreContent] = useState<any>({
-    title: "Узнайте больше",
-    content: "",
-    file_name: "",
-    file_url: "",
-    file_type: "",
-  });
+
 
   // Load content from database
   const { data: dbContent, isLoading } = trpc.content.get.useQuery(
@@ -106,17 +99,7 @@ export default function Home() {
     { retry: 1 }
   );
 
-  useEffect(() => {
-    if (dbContent && dbContent.learn_more) {
-      setLearnMoreContent(dbContent.learn_more);
-    }
-  }, [dbContent]);
 
-  const loadLearnMoreContent = () => {
-    if (dbContent && dbContent.learn_more) {
-      setLearnMoreContent(dbContent.learn_more);
-    }
-  };
 
   const filteredProducts = selectedCategory
     ? PRODUCTS.filter((p) => p.category === selectedCategory)
@@ -201,10 +184,7 @@ export default function Home() {
               <Button
                 size="lg"
                 variant="outline"
-                onClick={() => {
-                  loadLearnMoreContent();
-                  setShowLearnMore(true);
-                }}
+                onClick={() => setLocation("/learn-more")}
               >
                 {dbContent?.hero?.cta_secondary || "Узнать больше"}
               </Button>
@@ -384,32 +364,7 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* Learn More Modal */}
-      <Dialog open={showLearnMore} onOpenChange={setShowLearnMore}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{learnMoreContent.title}</DialogTitle>
-          </DialogHeader>
-          <div className="mt-4 space-y-4">
-            {learnMoreContent.content && (
-              <p className="text-slate-700">{learnMoreContent.content}</p>
-            )}
-            {learnMoreContent.file_url && (
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <p className="text-sm text-slate-600 mb-2">Загруженный файл:</p>
-                <a
-                  href={learnMoreContent.file_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-green-700 hover:text-green-800 font-medium"
-                >
-                  📄 {learnMoreContent.file_name}
-                </a>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+
     </div>
   );
 }
