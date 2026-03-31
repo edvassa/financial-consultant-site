@@ -120,9 +120,9 @@ export default function Home() {
               Блог
             </Button>
             {isAuthenticated ? (
-              <Button variant="outline" onClick={() => setLocation("/dashboard")}>Панель управления</Button>
+              <Button variant="outline" onClick={() => setLocation("/dashboard")}>Админ-панель</Button>
             ) : (
-              <Button variant="default" onClick={() => window.location.href = getLoginUrl()}>Связаться со мной</Button>
+              <Button variant="default" onClick={() => window.location.href = getLoginUrl() + '?redirect=/dashboard'}>Админ-панель</Button>
             )}
           </div>
         </div>
