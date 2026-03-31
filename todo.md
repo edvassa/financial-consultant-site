@@ -125,3 +125,11 @@
 - [ ] Display full product descriptions in edit form
 - [ ] Allow editing of name, description, details, price, category
 - [ ] Save changes to database
+
+
+## Phase 14: Blog Subscription Feature
+- [x] Create blog_subscribers table in database
+- [ ] Add subscription product to services
+- [ ] Create subscription form on services page
+- [ ] Implement email notifications using Manus built-in service
+- [ ] Test subscription functionality

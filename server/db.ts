@@ -1,6 +1,6 @@
 import { eq, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, products, orders, consultationBookings, blogArticles } from "../drizzle/schema";
+import { InsertUser, users, products, orders, consultationBookings, blogArticles, blogSubscribers } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -195,6 +195,25 @@ export async function deleteBlogArticle(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return db.delete(blogArticles).where(eq(blogArticles.id, id));
+}
+
+// Blog subscriber queries
+export async function subscribeToBlog(email: string, name?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(blogSubscribers).values({ email, name: name || null, subscribed: 1 });
+}
+
+export async function getBlogSubscribers() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(blogSubscribers).where(eq(blogSubscribers.subscribed, 1));
+}
+
+export async function unsubscribeFromBlog(email: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(blogSubscribers).set({ subscribed: 0 }).where(eq(blogSubscribers.email, email));
 }
 
 // TODO: add feature queries here as your schema grows.

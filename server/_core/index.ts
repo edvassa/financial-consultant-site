@@ -12,6 +12,7 @@ import productsRouter from "../routes/products";
 import ordersRouter from "../routes/orders";
 import consultationsRouter from "../routes/consultations";
 import blogRouter from "../routes/blog";
+import subscriptionRouter from "../routes/subscription";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -50,6 +51,8 @@ async function startServer() {
   app.use("/api/consultations", consultationsRouter);
   // Blog API
   app.use("/api/blog", blogRouter);
+  // Blog subscription API
+  app.use("/api/subscription", subscriptionRouter);
   // tRPC API
   app.use(
     "/api/trpc",

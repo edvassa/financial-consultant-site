@@ -95,3 +95,16 @@ export const blogArticles = mysqlTable("blogArticles", {
 
 export type BlogArticle = typeof blogArticles.$inferSelect;
 export type InsertBlogArticle = typeof blogArticles.$inferInsert;
+
+// Blog subscribers table for newsletter subscriptions
+export const blogSubscribers = mysqlTable("blogSubscribers", {
+  id: int("id").autoincrement().primaryKey(),
+  email: varchar("email", { length: 320 }).notNull().unique(),
+  name: varchar("name", { length: 255 }),
+  subscribed: int("subscribed").default(1), // 1 = active, 0 = unsubscribed
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BlogSubscriber = typeof blogSubscribers.$inferSelect;
+export type InsertBlogSubscriber = typeof blogSubscribers.$inferInsert;
