@@ -110,3 +110,18 @@
 - [x] Load real 8 products into database
 - [x] Explain consultations section functionality
 - [x] Explain orders section functionality
+
+
+## Phase 12: Automatic Download Link Delivery
+- [ ] Add file upload UI to product management in admin panel
+- [ ] Implement file upload to S3 storage
+- [ ] Create automatic email notification when order is created
+- [ ] Send download link in email for digital products
+- [ ] Test file upload and email delivery
+
+
+## Phase 13: Product Editing in Admin Panel
+- [ ] Add product editing modal/form to admin dashboard
+- [ ] Display full product descriptions in edit form
+- [ ] Allow editing of name, description, details, price, category
+- [ ] Save changes to database

@@ -1,14 +1,16 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Download, Plus, Trash2, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Download, Plus, Trash2, Eye, EyeOff, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 interface Product {
   id: number;
   name: string;
+  description?: string;
+  details?: string;
   price: number;
   category: string;
   isActive: number;
@@ -44,14 +46,21 @@ export default function Dashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState<Partial<Product>>({});
 
   useEffect(() => {
     if (!isAuthenticated) {
       setLocation("/");
       return;
     }
+    const ownerEmail = "edvassa@gmail.com";
+    if (user?.email !== ownerEmail) {
+      setLocation("/");
+      return;
+    }
     fetchData();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.email, setLocation]);
 
   const fetchData = async () => {
     try {
@@ -95,6 +104,62 @@ export default function Dashboard() {
       );
     } catch (error) {
       console.error("Error updating product:", error);
+    }
+  };
+
+  const handleEditProduct = (product: Product) => {
+    setEditingId(product.id);
+    setEditForm(product);
+  };
+
+  const handleSaveProduct = async () => {
+    if (!editingId) return;
+    try {
+      const response = await fetch(`/api/products/${editingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm),
+      });
+      if (response.ok) {
+        setProducts(
+          products.map((p) =>
+            p.id === editingId ? { ...p, ...editForm } : p
+          )
+        );
+        setEditingId(null);
+        setEditForm({});
+        alert("Product updated successfully!");
+      }
+    } catch (error) {
+      console.error("Error updating product:", error);
+      alert("Error updating product");
+    }
+  }
+
+  const handleFileUpload = async (productId: number, file: File) => {
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64 = e.target?.result as string;
+        const response = await fetch(`/api/products/${productId}/file`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileBase64: base64,
+            fileName: file.name,
+            fileSize: file.size,
+          }),
+        });
+        if (response.ok) {
+          const updated = await response.json();
+          setProducts(products.map((p) => (p.id === productId ? updated : p)));
+          alert("File uploaded successfully!");
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      alert("Error uploading file");
     }
   };
 
@@ -186,15 +251,52 @@ export default function Dashboard() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      {product.fileUrl && (
-                        <div className="flex items-center gap-2 text-sm text-slate-600">
-                          <Download className="h-4 w-4" />
-                          <span>{product.fileName}</span>
-                        </div>
-                      )}
-                      <p className="text-xs text-slate-500 mt-2">
-                        Created: {new Date(product.createdAt).toLocaleDateString()}
-                      </p>
+                      <div className="space-y-3">
+                        {product.fileUrl ? (
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-sm text-slate-600">
+                              <Download className="h-4 w-4" />
+                              <span>{product.fileName}</span>
+                            </div>
+                            <label className="cursor-pointer">
+                              <input
+                                type="file"
+                                accept=".pdf,.doc,.docx,.zip"
+                                onChange={(e) => {
+                                  if (e.target.files?.[0]) {
+                                    handleFileUpload(product.id, e.target.files[0]);
+                                  }
+                                }}
+                                className="hidden"
+                              />
+                              <Button variant="outline" size="sm" className="gap-2">
+                                <Upload className="h-4 w-4" />
+                                Replace
+                              </Button>
+                            </label>
+                          </div>
+                        ) : (
+                          <label className="cursor-pointer">
+                            <input
+                              type="file"
+                              accept=".pdf,.doc,.docx,.zip"
+                              onChange={(e) => {
+                                if (e.target.files?.[0]) {
+                                  handleFileUpload(product.id, e.target.files[0]);
+                                }
+                              }}
+                              className="hidden"
+                            />
+                            <Button variant="outline" size="sm" className="gap-2 w-full">
+                              <Upload className="h-4 w-4" />
+                              Upload File
+                            </Button>
+                          </label>
+                        )}
+                        <p className="text-xs text-slate-500">
+                          Created: {new Date(product.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
                     </CardContent>
                   </Card>
                 ))
