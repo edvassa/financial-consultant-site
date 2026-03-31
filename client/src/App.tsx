@@ -4,6 +4,7 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { BusinessSchema, PersonSchema } from "./components/SEOHead";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import ContentManager from "./pages/ContentManager";
@@ -45,6 +46,8 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
+      <BusinessSchema />
+      <PersonSchema />
       <ThemeProvider
         defaultTheme="light"
         // switchable

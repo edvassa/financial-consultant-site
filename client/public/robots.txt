@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /api/
+Disallow: /*.json$
+Disallow: /?*
+
+# Specific rules for Google
+User-agent: Googlebot
+Allow: /
+
+# Specific rules for Yandex
+User-agent: YandexBot
+Allow: /
+
+# Sitemap location
+Sitemap: https://finconsult-turcanelena.manus.space/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1
