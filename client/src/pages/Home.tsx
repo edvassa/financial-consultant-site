@@ -6,6 +6,7 @@ import { ArrowRight, CheckCircle2, Globe, TrendingUp, Shield } from "lucide-reac
 import { useState } from "react";
 import { useLocation } from "wouter";
 import FeaturedBlog from "@/components/FeaturedBlog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // Consultant photo URL (cleaned version)
 const CONSULTANT_PHOTO = "https://d2xsxph8kpxj0f.cloudfront.net/310419663030588662/Cp4PZg8zcaAboFkhLCd7R5/elena_clean_portrait_331f0015.png";
@@ -100,6 +101,27 @@ export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showLearnMore, setShowLearnMore] = useState(false);
+  const [learnMoreContent, setLearnMoreContent] = useState<any>({
+    title: "Узнайте больше",
+    content: "",
+    file_name: "",
+    file_url: "",
+  });
+
+  const loadLearnMoreContent = () => {
+    try {
+      const saved = localStorage.getItem("siteContent");
+      if (saved) {
+        const data = JSON.parse(saved);
+        if (data.learn_more) {
+          setLearnMoreContent(data.learn_more);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading content:", error);
+    }
+  };
 
   const filteredProducts = selectedCategory
     ? PRODUCTS.filter((p) => p.category === selectedCategory)
@@ -146,7 +168,14 @@ export default function Home() {
               >
                 Забронировать консультацию <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              <Button size="lg" variant="outline">
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => {
+                  loadLearnMoreContent();
+                  setShowLearnMore(true);
+                }}
+              >
                 Узнать больше
               </Button>
             </div>
@@ -339,6 +368,37 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Learn More Modal */}
+      <Dialog open={showLearnMore} onOpenChange={setShowLearnMore}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{learnMoreContent.title}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {learnMoreContent.content && (
+              <div className="prose prose-sm max-w-none">
+                <p className="text-slate-700 whitespace-pre-wrap">{learnMoreContent.content}</p>
+              </div>
+            )}
+            {learnMoreContent.file_name && (
+              <div className="mt-4 p-4 bg-green-50 rounded-lg">
+                <p className="text-sm text-slate-600 mb-2">📎 Загруженный файл:</p>
+                <a
+                  href={learnMoreContent.file_url}
+                  download={learnMoreContent.file_name}
+                  className="text-green-700 hover:text-green-800 font-medium underline"
+                >
+                  {learnMoreContent.file_name}
+                </a>
+              </div>
+            )}
+            {!learnMoreContent.content && !learnMoreContent.file_name && (
+              <p className="text-slate-500 italic">Информация будет доступна вскоре...</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Footer */}
       <footer className="bg-slate-900 text-slate-400 py-8">

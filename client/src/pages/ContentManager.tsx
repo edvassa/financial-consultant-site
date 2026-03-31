@@ -3,97 +3,49 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
-import { Loader2, Save, RotateCcw } from "lucide-react";
+import { Save, RotateCcw, X } from "lucide-react";
 
-interface ContentSection {
-  key: string;
-  label: string;
-  fields: {
-    name: string;
-    label: string;
-    type: "text" | "textarea" | "richtext";
-    rows?: number;
-  }[];
-}
+// Default content structure matching the website
+const DEFAULT_CONTENT = {
+  hero: {
+    title: "Ваш личный финансовый директор онлайн",
+    subtitle: "Профессиональные инструменты уровня CFO: готовые решения (шаблоны, обучающие материалы) и индивидуальная работа (приватные консультации, поддержка бизнеса). Быстрое внедрение, точные расчеты, прозрачная финансовая система.",
+    cta_primary: "Забронировать консультацию",
+    cta_secondary: "Узнать больше",
+  },
+  about: {
+    section_title: "Обо мне",
+    paragraph_1: "Меня зовут Елена Цуркан и мой личный опыт в стратегическом финансовом управлении превышает 15 лет, что позволяет мне превратить финансовый хаос в прозрачную и прибыльную систему. Я предлагаю комплексный подход: от готовых инструментов уровня CFO до индивидуальных консультаций и полной поддержки бизнеса.",
+    paragraph_2: "Со мной вы получаете не просто отчетность, а стратегический инструмент для многократного роста прибыли и полного финансового контроля.",
+  },
+  benefits: {
+    section_title: "Почему работать со мной",
+    benefit_1_title: "Полная финансовая прозрачность",
+    benefit_1_desc: "Всегда вы увидите, куда идят деньги и что приносит максимальную прибыль. Я внедряю P&L, Cash Flow и Balance, понятные даже не-финансистам.",
+    benefit_2_title: "Фокус на рост прибыли",
+    benefit_2_desc: "Я не просто считаю, я анализирую и нахожу точки роста. Мои инструменты позволяют принимать решения, которые увеличивают прибыльность бизнеса.",
+    benefit_3_title: "Управление рисками",
+    benefit_3_desc: "Вы увидите потенциальные кассовые разрывы и финансовые угрозы заранее. Я строю предсказуемую финансовую модель, защищая ваш бизнес от неожиданностей.",
+  },
+  learn_more: {
+    title: "Узнайте больше",
+    content: "",
+    file_name: "",
+  },
+};
 
-const CONTENT_SECTIONS: ContentSection[] = [
-  {
-    key: "hero",
-    label: "Главный баннер (Hero)",
-    fields: [
-      { name: "title", label: "Заголовок", type: "text" },
-      { name: "subtitle", label: "Подзаголовок", type: "textarea", rows: 2 },
-      { name: "cta_primary", label: "Кнопка 1", type: "text" },
-      { name: "cta_secondary", label: "Кнопка 2", type: "text" },
-    ],
-  },
-  {
-    key: "about",
-    label: "Обо мне",
-    fields: [
-      { name: "section_title", label: "Заголовок секции", type: "text" },
-      { name: "paragraph_1", label: "Первый параграф", type: "textarea", rows: 3 },
-      { name: "paragraph_2", label: "Второй параграф", type: "textarea", rows: 3 },
-    ],
-  },
-  {
-    key: "benefits",
-    label: "Почему работать со мной",
-    fields: [
-      { name: "section_title", label: "Заголовок секции", type: "text" },
-      { name: "benefit_1_title", label: "Преимущество 1 - Название", type: "text" },
-      { name: "benefit_1_desc", label: "Преимущество 1 - Описание", type: "textarea", rows: 2 },
-      { name: "benefit_2_title", label: "Преимущество 2 - Название", type: "text" },
-      { name: "benefit_2_desc", label: "Преимущество 2 - Описание", type: "textarea", rows: 2 },
-      { name: "benefit_3_title", label: "Преимущество 3 - Название", type: "text" },
-      { name: "benefit_3_desc", label: "Преимущество 3 - Описание", type: "textarea", rows: 2 },
-    ],
-  },
-  {
-    key: "services",
-    label: "Услуги и продукты",
-    fields: [
-      { name: "section_title", label: "Заголовок секции", type: "text" },
-      { name: "section_subtitle", label: "Подзаголовок секции", type: "textarea", rows: 2 },
-    ],
-  },
-  {
-    key: "payment",
-    label: "Реквизиты для оплаты",
-    fields: [
-      { name: "section_title", label: "Заголовок секции", type: "text" },
-      { name: "section_subtitle", label: "Подзаголовок секции", type: "text" },
-      { name: "iban", label: "IBAN", type: "text" },
-      { name: "recipient", label: "Получатель", type: "text" },
-      { name: "tax_code", label: "Налоговый код", type: "text" },
-      { name: "currency", label: "Валюта", type: "text" },
-      { name: "payment_note", label: "Примечание после оплаты", type: "textarea", rows: 2 },
-    ],
-  },
-  {
-    key: "cta",
-    label: "Финальный призыв к действию",
-    fields: [
-      { name: "title", label: "Заголовок", type: "text" },
-      { name: "subtitle", label: "Подзаголовок", type: "textarea", rows: 2 },
-      { name: "email", label: "Email для контакта", type: "text" },
-    ],
-  },
-  {
-    key: "footer",
-    label: "Подвал сайта",
-    fields: [
-      { name: "copyright", label: "Копирайт", type: "text" },
-      { name: "author", label: "Автор", type: "text" },
-    ],
-  },
+const SECTIONS = [
+  { key: "hero", label: "Главный баннер (Hero)" },
+  { key: "about", label: "Обо мне" },
+  { key: "benefits", label: "Почему работать со мной" },
+  { key: "learn_more", label: "Узнать больше (Learn More)" },
 ];
 
 export default function ContentManager() {
   const { user, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
-  const [selectedSection, setSelectedSection] = useState<string>(CONTENT_SECTIONS[0].key);
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [selectedSection, setSelectedSection] = useState<string>("hero");
+  const [formData, setFormData] = useState<Record<string, any>>(DEFAULT_CONTENT);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
 
@@ -104,7 +56,8 @@ export default function ContentManager() {
     }
   }, [isAuthenticated, setLocation]);
 
-  const currentSection = CONTENT_SECTIONS.find((s) => s.key === selectedSection);
+  const currentSection = SECTIONS.find((s) => s.key === selectedSection);
+  const sectionData = formData[selectedSection] || {};
 
   const handleFieldChange = (fieldName: string, value: string) => {
     setFormData((prev) => ({
@@ -116,14 +69,28 @@ export default function ContentManager() {
     }));
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      // Create a simple file URL for demo
+      const fileUrl = URL.createObjectURL(file);
+      handleFieldChange("file_url", fileUrl);
+      handleFieldChange("file_name", file.name);
+      setSaveMessage("✅ Файл загружен!");
+      setTimeout(() => setSaveMessage(""), 3000);
+    } catch (error) {
+      setSaveMessage("❌ Ошибка при загрузке файла");
+    }
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     setSaveMessage("");
     try {
-      // Save to database
-      const contentToSave = formData[selectedSection] || {};
-      // TODO: Call tRPC mutation to save content
-      // await trpc.content.updatePage.mutate({ pageKey: selectedSection, content: contentToSave });
+      // Save to localStorage for demo
+      localStorage.setItem("siteContent", JSON.stringify(formData));
       setSaveMessage("✅ Изменения сохранены!");
       setTimeout(() => setSaveMessage(""), 3000);
     } catch (error) {
@@ -135,11 +102,10 @@ export default function ContentManager() {
   };
 
   const handleReset = () => {
-    setFormData((prev) => {
-      const newData = { ...prev };
-      delete newData[selectedSection];
-      return newData;
-    });
+    setFormData((prev) => ({
+      ...prev,
+      [selectedSection]: DEFAULT_CONTENT[selectedSection as keyof typeof DEFAULT_CONTENT],
+    }));
   };
 
   return (
@@ -163,11 +129,11 @@ export default function ContentManager() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {CONTENT_SECTIONS.map((section) => (
+                  {SECTIONS.map((section) => (
                     <button
                       key={section.key}
                       onClick={() => setSelectedSection(section.key)}
-                      className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
+                      className={`w-full text-left px-4 py-2 rounded-lg transition-colors text-sm ${
                         selectedSection === section.key
                           ? "bg-green-700 text-white"
                           : "bg-slate-100 text-slate-900 hover:bg-slate-200"
@@ -193,42 +159,88 @@ export default function ContentManager() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
-                    {currentSection.fields.map((field) => (
-                      <div key={field.name}>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">
-                          {field.label}
-                        </label>
-                        {field.type === "textarea" ? (
-                          <textarea
-                            value={formData[selectedSection]?.[field.name] || ""}
-                            onChange={(e) =>
-                              handleFieldChange(field.name, e.target.value)
-                            }
-                            rows={field.rows || 3}
-                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-700 focus:border-transparent"
-                            placeholder={`Введите ${field.label.toLowerCase()}`}
-                          />
-                        ) : (
-                          <input
-                            type="text"
-                            value={formData[selectedSection]?.[field.name] || ""}
-                            onChange={(e) =>
-                              handleFieldChange(field.name, e.target.value)
-                            }
-                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-700 focus:border-transparent"
-                            placeholder={`Введите ${field.label.toLowerCase()}`}
-                          />
-                        )}
-                      </div>
-                    ))}
+                    {Object.entries(sectionData).map(([key, value]: [string, any]) => {
+                      if (key === "file_url") return null;
+                      
+                      const label = key
+                        .replace(/_/g, " ")
+                        .replace(/^\w/, (c) => c.toUpperCase());
+
+                      if (key === "file_name") {
+                        return (
+                          <div key={key}>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                              Загрузить файл (PDF, Word, JPG)
+                            </label>
+                            <div className="flex items-center gap-4">
+                              <input
+                                type="file"
+                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                onChange={handleFileUpload}
+                                className="flex-1"
+                                id="file-upload"
+                              />
+                              {value && typeof value === "string" && (
+                                <div className="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-lg">
+                                  <span className="text-sm text-green-700">
+                                    ✓ {value}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      handleFieldChange("file_url", "");
+                                      handleFieldChange("file_name", "");
+                                    }}
+                                    className="text-green-700 hover:text-green-900"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div key={key}>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            {label}
+                          </label>
+                          {typeof value === "string" && value.length > 100 ? (
+                            <textarea
+                              value={value}
+                              onChange={(e) =>
+                                handleFieldChange(key, e.target.value)
+                              }
+                              rows={4}
+                              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-700 focus:border-transparent"
+                              placeholder={`Введите ${label.toLowerCase()}`}
+                            />
+                          ) : (
+                            <input
+                              type="text"
+                              value={value}
+                              onChange={(e) =>
+                                handleFieldChange(key, e.target.value)
+                              }
+                              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-700 focus:border-transparent"
+                              placeholder={`Введите ${label.toLowerCase()}`}
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
 
                     {/* Save Message */}
                     {saveMessage && (
-                      <div className={`p-4 rounded-lg text-sm ${
-                        saveMessage.includes("✅")
-                          ? "bg-green-50 text-green-700"
-                          : "bg-red-50 text-red-700"
-                      }`}>
+                      <div
+                        className={`p-4 rounded-lg text-sm ${
+                          saveMessage.includes("✅")
+                            ? "bg-green-50 text-green-700"
+                            : "bg-red-50 text-red-700"
+                        }`}
+                      >
                         {saveMessage}
                       </div>
                     )}
@@ -241,10 +253,7 @@ export default function ContentManager() {
                         className="bg-green-700 hover:bg-green-800 flex items-center gap-2"
                       >
                         {isSaving ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Сохранение...
-                          </>
+                          <>Сохранение...</>
                         ) : (
                           <>
                             <Save className="h-4 w-4" />
