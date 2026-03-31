@@ -381,34 +381,17 @@ export default function Home() {
                 <p className="text-slate-700 whitespace-pre-wrap">{learnMoreContent.content}</p>
               </div>
             )}
-            {learnMoreContent.file_url && (
+            {learnMoreContent.file_name && (
               <div className="mt-4 p-4 bg-green-50 rounded-lg">
                 <p className="text-sm text-slate-600 mb-2">📎 Загруженный файл:</p>
-                {learnMoreContent.file_name?.endsWith('.pdf') ? (
-                  <iframe
-                    src={learnMoreContent.file_url}
-                    className="w-full h-96 border border-slate-300 rounded"
-                    title={learnMoreContent.file_name}
-                  />
-                ) : learnMoreContent.file_name?.endsWith('.jpg') || learnMoreContent.file_name?.endsWith('.jpeg') || learnMoreContent.file_name?.endsWith('.png') ? (
-                  <img
-                    src={learnMoreContent.file_url}
-                    alt={learnMoreContent.file_name}
-                    className="max-w-full h-auto rounded border border-slate-300"
-                  />
-                ) : (
-                  <div className="p-4 bg-white rounded border border-slate-300">
-                    <p className="text-slate-600 mb-2">Файл: {learnMoreContent.file_name}</p>
-                    <a
-                      href={learnMoreContent.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-green-700 hover:text-green-800 font-medium underline"
-                    >
-                      Открыть файл
-                    </a>
-                  </div>
-                )}
+                <a
+                  href={learnMoreContent.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-green-700 hover:text-green-800 font-medium underline"
+                >
+                  {learnMoreContent.file_name}
+                </a>
               </div>
             )}
             {!learnMoreContent.content && !learnMoreContent.file_name && (
