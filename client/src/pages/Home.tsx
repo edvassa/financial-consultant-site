@@ -155,7 +155,11 @@ export default function Home() {
       <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="text-2xl font-bold text-slate-900">FinDirector</div>
-          <div className="flex gap-4 items-center">
+          <div className="flex gap-6 items-center">
+            <div className="flex gap-4 text-sm text-slate-600">
+              <div>Email: edvassa@gmail.com</div>
+              <div>+37369002909</div>
+            </div>
             <Button
               variant="ghost"
               onClick={() => setLocation("/blog")}
@@ -362,6 +366,7 @@ export default function Home() {
               <h4 className="text-white font-bold mb-4">Контакты</h4>
               <ul className="space-y-2 text-sm">
                 <li>Email: edvassa@gmail.com</li>
+                <li>Телефон: +37369002909</li>
               </ul>
             </div>
 
