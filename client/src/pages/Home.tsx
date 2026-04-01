@@ -12,8 +12,8 @@ import { getLoginUrl } from "@/const";
 // Consultant photo URL (cleaned version)
 const CONSULTANT_PHOTO = "https://d2xsxph8kpxj0f.cloudfront.net/310419663030588662/Cp4PZg8zcaAboFkhLCd7R5/elena_clean_portrait_331f0015.png";
 
-// Services and products data
-const PRODUCTS = [
+// Default fallback products - will be replaced by database data
+const DEFAULT_PRODUCTS = [
   {
     id: 1,
     name: 'Книга "От хаоса к прибыли"',
@@ -112,11 +112,19 @@ export default function Home() {
     }
   );
 
-
+  // Load products from database with automatic refresh
+  const { data: dbProducts = DEFAULT_PRODUCTS } = trpc.products.list.useQuery(
+    undefined,
+    { 
+      retry: 1,
+      refetchInterval: 5000, // Refresh every 5 seconds
+      refetchOnWindowFocus: true, // Refresh when window regains focus
+    }
+  );
 
   const filteredProducts = selectedCategory
-    ? PRODUCTS.filter((p) => p.category === selectedCategory)
-    : PRODUCTS;
+    ? dbProducts.filter((p) => p.category === selectedCategory)
+    : dbProducts;
 
   // Build benefits from database content
   const getBenefits = () => {

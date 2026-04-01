@@ -2,7 +2,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { COOKIE_NAME } from "@shared/const";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
-import { getProducts, createProduct, deleteProduct, getContentPage, upsertContentPage } from "./db";
+import { getProducts, createProduct, deleteProduct, updateProduct, getContentPage, upsertContentPage } from "./db";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
@@ -47,6 +47,25 @@ export const appRouter = router({
           throw new TRPCError({ code: "FORBIDDEN", message: "Only admin can delete products" });
         }
         return deleteProduct(input.productId);
+      }),
+    update: protectedProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          name: z.string().optional(),
+          description: z.string().optional(),
+          details: z.string().optional(),
+          price: z.number().optional(),
+          category: z.enum(["digital", "service", "subscription"]).optional(),
+          isMonthly: z.number().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user?.role !== "admin") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Only admin can update products" });
+        }
+        const { id, ...data } = input;
+        return updateProduct(id, data);
       }),
   }),
 

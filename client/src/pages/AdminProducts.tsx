@@ -19,19 +19,34 @@ import {
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
-import { Trash2, Edit2, Plus } from "lucide-react";
+import { Trash2, Edit2, Plus, X, Save } from "lucide-react";
 
 export default function AdminProducts() {
   const { user } = useAuth();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [details, setDetails] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState<"digital" | "service" | "subscription">("digital");
   const [file, setFile] = useState<File | null>(null);
   const [isMonthly, setIsMonthly] = useState(false);
 
+  // Edit mode state
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editDetails, setEditDetails] = useState("");
+  const [editPrice, setEditPrice] = useState("");
+  const [editCategory, setEditCategory] = useState<"digital" | "service" | "subscription">("digital");
+  const [editIsMonthly, setEditIsMonthly] = useState(false);
+
   // Fetch products
-  const { data: products = [], refetch: refetchProducts } = trpc.products.list.useQuery();
+  const { data: products = [], refetch: refetchProducts } = trpc.products.list.useQuery(
+    undefined,
+    { refetchInterval: 5000 }
+  );
+
+  const utils = trpc.useUtils();
 
   // Create product mutation
   const createProductMutation = trpc.products.create.useMutation({
@@ -39,10 +54,27 @@ export default function AdminProducts() {
       toast.success("Продукт успешно создан!");
       setName("");
       setDescription("");
+      setDetails("");
       setPrice("");
       setFile(null);
       setCategory("digital");
       setIsMonthly(false);
+      // Invalidate products cache
+      utils.products.list.invalidate();
+      refetchProducts();
+    },
+    onError: (error: any) => {
+      toast.error(`Ошибка: ${error.message}`);
+    },
+  });
+
+  // Update product mutation
+  const updateProductMutation = trpc.products.update.useMutation({
+    onSuccess: () => {
+      toast.success("Продукт успешно обновлён!");
+      setEditingId(null);
+      // Invalidate products cache
+      utils.products.list.invalidate();
       refetchProducts();
     },
     onError: (error: any) => {
@@ -54,6 +86,8 @@ export default function AdminProducts() {
   const deleteProductMutation = trpc.products.delete.useMutation({
     onSuccess: () => {
       toast.success("Продукт удалён!");
+      // Invalidate products cache
+      utils.products.list.invalidate();
       refetchProducts();
     },
     onError: (error) => {
@@ -75,8 +109,6 @@ export default function AdminProducts() {
       return;
     }
 
-    // For now, we'll create the product without the file
-    // In a real implementation, you'd upload the file first
     createProductMutation.mutate({
       name,
       description,
@@ -84,6 +116,33 @@ export default function AdminProducts() {
       category,
       isMonthly: isMonthly ? 1 : 0,
       fileName: file?.name || null,
+    });
+  };
+
+  const startEdit = (product: any) => {
+    setEditingId(product.id);
+    setEditName(product.name);
+    setEditDescription(product.description || "");
+    setEditDetails(product.details || "");
+    setEditPrice(product.price?.toString() || "");
+    setEditCategory(product.category);
+    setEditIsMonthly(product.isMonthly || false);
+  };
+
+  const handleUpdate = () => {
+    if (!editName || !editPrice || !editCategory) {
+      toast.error("Заполните все обязательные поля");
+      return;
+    }
+
+    updateProductMutation.mutate({
+      id: editingId!,
+      name: editName,
+      description: editDescription,
+      details: editDetails,
+      price: parseInt(editPrice),
+      category: editCategory,
+      isMonthly: editIsMonthly ? 1 : 0,
     });
   };
 
@@ -138,13 +197,25 @@ export default function AdminProducts() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Описание
+                      Краткое описание
                     </label>
                     <Textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Описание продукта"
-                      rows={3}
+                      placeholder="Краткое описание (отображается в карточке)"
+                      rows={2}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Полное описание (детали)
+                    </label>
+                    <Textarea
+                      value={details}
+                      onChange={(e) => setDetails(e.target.value)}
+                      placeholder="Полное описание (отображается в карточке)"
+                      rows={2}
                     />
                   </div>
 
@@ -232,49 +303,162 @@ export default function AdminProducts() {
                 ) : (
                   <div className="space-y-4">
                     {products.map((product: any) => (
-                      <div
-                        key={product.id}
-                        className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition"
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h3 className="font-semibold text-gray-900">{product.name}</h3>
-                            <p className="text-sm text-gray-600">{product.description}</p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                deleteProductMutation.mutate({ productId: product.id })
-                              }
-                              disabled={deleteProductMutation.isPending}
-                            >
-                              <Trash2 className="w-4 h-4 text-red-600" />
-                            </Button>
-                          </div>
-                        </div>
+                      <div key={product.id}>
+                        {editingId === product.id ? (
+                          // Edit mode
+                          <Card className="border-blue-300 bg-blue-50">
+                            <CardContent className="pt-6 space-y-4">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Название
+                                </label>
+                                <Input
+                                  value={editName}
+                                  onChange={(e) => setEditName(e.target.value)}
+                                  placeholder="Название продукта"
+                                />
+                              </div>
 
-                        <div className="flex justify-between items-center text-sm">
-                          <div className="space-y-1">
-                            <p className="text-gray-600">
-                              Цена: <span className="font-semibold">{product.price} MDL</span>
-                            </p>
-                            <p className="text-gray-600">
-                              Категория:{" "}
-                              <span className="font-semibold">
-                                {product.category === "digital"
-                                  ? "Цифровой продукт"
-                                  : product.category === "service"
-                                  ? "Услуга"
-                                  : "Подписка"}
-                              </span>
-                            </p>
-                            {product.isMonthly && (
-                              <p className="text-green-600 font-semibold">Ежемесячная</p>
-                            )}
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Краткое описание
+                                </label>
+                                <Textarea
+                                  value={editDescription}
+                                  onChange={(e) => setEditDescription(e.target.value)}
+                                  placeholder="Краткое описание"
+                                  rows={2}
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Полное описание (детали)
+                                </label>
+                                <Textarea
+                                  value={editDetails}
+                                  onChange={(e) => setEditDetails(e.target.value)}
+                                  placeholder="Полное описание"
+                                  rows={2}
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Цена (MDL)
+                                </label>
+                                <Input
+                                  type="number"
+                                  value={editPrice}
+                                  onChange={(e) => setEditPrice(e.target.value)}
+                                  placeholder="Цена"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Категория
+                                </label>
+                                <Select value={editCategory} onValueChange={(value: any) => setEditCategory(value)}>
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="digital">Цифровой продукт</SelectItem>
+                                    <SelectItem value="service">Услуга</SelectItem>
+                                    <SelectItem value="subscription">Подписка</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              {editCategory === "subscription" && (
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    id={`editIsMonthly-${product.id}`}
+                                    checked={editIsMonthly}
+                                    onChange={(e) => setEditIsMonthly(e.target.checked)}
+                                  />
+                                  <label htmlFor={`editIsMonthly-${product.id}`} className="text-sm font-medium text-gray-700">
+                                    Ежемесячная подписка
+                                  </label>
+                                </div>
+                              )}
+
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={handleUpdate}
+                                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                                  disabled={updateProductMutation.isPending}
+                                >
+                                  <Save className="w-4 h-4 mr-2" />
+                                  {updateProductMutation.isPending ? "Сохранение..." : "Сохранить"}
+                                </Button>
+                                <Button
+                                  onClick={() => setEditingId(null)}
+                                  variant="outline"
+                                  className="flex-1"
+                                >
+                                  <X className="w-4 h-4 mr-2" />
+                                  Отмена
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ) : (
+                          // View mode
+                          <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <h3 className="font-semibold text-gray-900">{product.name}</h3>
+                                <p className="text-sm text-gray-600">{product.description}</p>
+                                {product.details && (
+                                  <p className="text-sm text-gray-600 mt-1">{product.details}</p>
+                                )}
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => startEdit(product)}
+                                >
+                                  <Edit2 className="w-4 h-4 text-blue-600" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    deleteProductMutation.mutate({ productId: product.id })
+                                  }
+                                  disabled={deleteProductMutation.isPending}
+                                >
+                                  <Trash2 className="w-4 h-4 text-red-600" />
+                                </Button>
+                              </div>
+                            </div>
+
+                            <div className="flex justify-between items-center text-sm">
+                              <div className="space-y-1">
+                                <p className="text-gray-600">
+                                  Цена: <span className="font-semibold">{product.price} MDL</span>
+                                </p>
+                                <p className="text-gray-600">
+                                  Категория:{" "}
+                                  <span className="font-semibold">
+                                    {product.category === "digital"
+                                      ? "Цифровой продукт"
+                                      : product.category === "service"
+                                      ? "Услуга"
+                                      : "Подписка"}
+                                  </span>
+                                </p>
+                                {product.isMonthly && (
+                                  <p className="text-green-600 font-semibold">Ежемесячная</p>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     ))}
                   </div>
