@@ -242,7 +242,7 @@ export default function Home() {
       </section>
 
       {/* Services & Products Section */}
-      <section className="bg-slate-50 py-16">
+      <section className="bg-slate-50 py-16" data-section="services">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-slate-900 mb-4 text-center">Услуги и продукты</h2>
           <p className="text-center text-slate-600 mb-12 max-w-2xl mx-auto">
@@ -298,7 +298,7 @@ export default function Home() {
                       className="w-full bg-green-700 hover:bg-green-800 mt-auto"
                       onClick={() => setLocation(`/book-consultation?product=${product.id}`)}
                     >
-                      Подробнее
+                      Связаться со мной
                     </Button>
                   </div>
                 </CardContent>
@@ -338,8 +338,11 @@ export default function Home() {
             <div>
               <h4 className="text-white font-bold mb-4">Быстрые ссылки</h4>
               <ul className="space-y-2 text-sm">
-                <li><button onClick={() => setLocation('/')} className="hover:text-white cursor-pointer">Главная</button></li>
-                <li><button onClick={() => setLocation('/#services')} className="hover:text-white cursor-pointer">Услуги</button></li>
+                <li><button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white cursor-pointer">Главная</button></li>
+                <li><button onClick={() => {
+                  const servicesSection = document.querySelector('[data-section="services"]');
+                  if (servicesSection) servicesSection.scrollIntoView({ behavior: 'smooth' });
+                }} className="hover:text-white cursor-pointer">Услуги</button></li>
                 <li><button onClick={() => setLocation('/blog')} className="hover:text-white cursor-pointer">Блог</button></li>
               </ul>
             </div>
