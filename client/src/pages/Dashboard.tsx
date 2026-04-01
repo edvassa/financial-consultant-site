@@ -163,6 +163,28 @@ export default function Dashboard() {
     }
   };
 
+  const handleDeleteOrder = async (id: number) => {
+    if (confirm("Are you sure you want to delete this order?")) {
+      try {
+        await fetch(`/api/orders/${id}`, { method: "DELETE" });
+        setOrders(orders.filter((o) => o.id !== id));
+      } catch (error) {
+        console.error("Error deleting order:", error);
+      }
+    }
+  };
+
+  const handleDeleteConsultation = async (id: number) => {
+    if (confirm("Are you sure you want to delete this consultation request?")) {
+      try {
+        await fetch(`/api/consultations/${id}`, { method: "DELETE" });
+        setBookings(bookings.filter((b) => b.id !== id));
+      } catch (error) {
+        console.error("Error deleting consultation:", error);
+      }
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
@@ -419,19 +441,29 @@ export default function Dashboard() {
                           <CardTitle className="text-slate-900">{order.customerName}</CardTitle>
                           <CardDescription>{order.customerEmail}</CardDescription>
                         </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-green-700">
-                            {order.price ? (typeof order.price === 'number' ? order.price.toLocaleString() : order.price) + ' MDL' : 'Не указана'}
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-green-700">
+                              {order.price ? (typeof order.price === 'number' ? order.price.toLocaleString() : order.price) + ' MDL' : 'Не указана'}
+                            </div>
+                            <div className={`text-xs font-semibold ${
+                              order.status === "paid"
+                                ? "text-green-600"
+                                : order.status === "pending"
+                                ? "text-yellow-600"
+                                : "text-slate-600"
+                            }`}>
+                              {order.status.toUpperCase()}
+                            </div>
                           </div>
-                          <div className={`text-xs font-semibold ${
-                            order.status === "paid"
-                              ? "text-green-600"
-                              : order.status === "pending"
-                              ? "text-yellow-600"
-                              : "text-slate-600"
-                          }`}>
-                            {order.status.toUpperCase()}
-                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteOrder(order.id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     </CardHeader>
@@ -469,14 +501,24 @@ export default function Dashboard() {
                           <CardTitle className="text-slate-900">{booking.clientName}</CardTitle>
                           <CardDescription>{booking.clientEmail}</CardDescription>
                         </div>
-                        <div className={`text-xs font-semibold px-2 py-1 rounded ${
-                          booking.status === "new"
-                            ? "bg-blue-100 text-blue-700"
-                            : booking.status === "scheduled"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-slate-100 text-slate-700"
-                        }`}>
-                          {booking.status.toUpperCase()}
+                        <div className="flex items-center gap-4">
+                          <div className={`text-xs font-semibold px-2 py-1 rounded ${
+                            booking.status === "new"
+                              ? "bg-blue-100 text-blue-700"
+                              : booking.status === "scheduled"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-slate-100 text-slate-700"
+                          }`}>
+                            {booking.status.toUpperCase()}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteConsultation(booking.id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     </CardHeader>
