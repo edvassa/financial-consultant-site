@@ -297,6 +297,9 @@ export default function Home() {
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col">
                   <div className="space-y-4 flex-1 flex flex-col">
+                    {product.details && (
+                      <p className="text-sm text-slate-600">{product.details}</p>
+                    )}
                     {product.price && (
                       <div className="text-2xl font-bold text-green-700">{product.price} MDL</div>
                     )}
