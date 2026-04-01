@@ -395,6 +395,7 @@ export default function AdminProducts() {
 
                               <div className="flex gap-2">
                                 <Button
+                                  type="button"
                                   onClick={handleUpdate}
                                   className="flex-1 bg-blue-600 hover:bg-blue-700"
                                   disabled={updateProductMutation.isPending}
@@ -403,6 +404,7 @@ export default function AdminProducts() {
                                   {updateProductMutation.isPending ? "Сохранение..." : "Сохранить"}
                                 </Button>
                                 <Button
+                                  type="button"
                                   onClick={() => setEditingId(null)}
                                   variant="outline"
                                   className="flex-1"
