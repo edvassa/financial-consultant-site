@@ -284,18 +284,18 @@ export default function Home() {
           {/* Products Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
-              <Card key={product.id} className="hover:shadow-lg transition-shadow">
+              <Card key={product.id} className="hover:shadow-lg transition-shadow flex flex-col">
                 <CardHeader>
                   <CardTitle className="text-lg">{product.name}</CardTitle>
                   <CardDescription>{product.description}</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
+                <CardContent className="flex-1 flex flex-col">
+                  <div className="space-y-4 flex-1 flex flex-col">
                     {product.price && (
                       <div className="text-2xl font-bold text-green-700">{product.price} MDL</div>
                     )}
                     <Button
-                      className="w-full bg-green-700 hover:bg-green-800"
+                      className="w-full bg-green-700 hover:bg-green-800 mt-auto"
                       onClick={() => setLocation(`/book-consultation?product=${product.id}`)}
                     >
                       Подробнее
