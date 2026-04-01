@@ -63,7 +63,7 @@ router.post("/", async (req, res) => {
       name,
       description,
       details,
-      price: parseInt(price),
+      price,
       category,
       isMonthly: isMonthly ? 1 : 0,
       fileUrl,

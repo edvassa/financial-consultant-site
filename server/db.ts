@@ -121,7 +121,22 @@ export async function deleteProduct(id: number) {
 export async function updateProduct(id: number, data: any) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.update(products).set(data).where(eq(products.id, id));
+  
+  // Filter out undefined values to only update provided fields
+  const updateData: any = {};
+  Object.keys(data).forEach(key => {
+    if (data[key] !== undefined) {
+      updateData[key] = data[key];
+    }
+  });
+  
+  if (Object.keys(updateData).length === 0) {
+    // No fields to update, just return the current product
+    const current = await db.select().from(products).where(eq(products.id, id)).limit(1);
+    return current.length > 0 ? current[0] : null;
+  }
+  
+  await db.update(products).set(updateData).where(eq(products.id, id));
   // Get the updated product
   const updated = await db.select().from(products).where(eq(products.id, id)).limit(1);
   return updated.length > 0 ? updated[0] : null;

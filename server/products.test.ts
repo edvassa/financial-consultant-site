@@ -113,7 +113,6 @@ describe("products router", () => {
       expect(error.message).toContain("admin");
     }
   });
-});
 
   it("should allow admin to update product price and category", async () => {
     const ctx = createAdminContext();
@@ -129,12 +128,19 @@ describe("products router", () => {
       fileName: "test.pdf",
     });
 
-    // Then update it
+    // Then update it with details field
+    const longRussianDetails = `Что входит в консультацию:
+• Онлайн-встреча длительностью 1,5–2 часа
+• Предварительный анализ ваших документов
+• Разбор конкретной ситуации
+• Практические рекомендации
+• Ответы на все ваши вопросы`;
+
     const updated = await caller.products.update({
       id: created.id,
       name: "Updated Product",
       description: "Updated Description",
-      details: "Updated Details",
+      details: longRussianDetails,
       price: "250",
       category: "service",
       isMonthly: 0,
@@ -143,6 +149,34 @@ describe("products router", () => {
     expect(updated.price).toBe("250");
     expect(updated.category).toBe("service");
     expect(updated.name).toBe("Updated Product");
+    expect(updated.details).toBe(longRussianDetails);
+    expect(updated.details).toContain("Что входит в консультацию");
+  });
+
+  it("should allow admin to update price field to text like 'Стоимость по запросу'", async () => {
+    const ctx = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+
+    // First create a product
+    const created = await caller.products.create({
+      name: "Product for Price Update",
+      description: "Test Description",
+      price: "100",
+      category: "service",
+      isMonthly: 0,
+    });
+
+    // Update only the price field to a text value
+    const updated = await caller.products.update({
+      id: created.id,
+      price: "Стоимость по запросу",
+    });
+
+    expect(updated.price).toBe("Стоимость по запросу");
+    // Verify category remains unchanged
+    expect(updated.category).toBe("service");
+    // Price was successfully updated to text value
+    expect(typeof updated.price).toBe("string");
   });
 
   it("should prevent non-admin from updating products", async () => {
@@ -164,3 +198,4 @@ describe("products router", () => {
       expect(error.message).toContain("admin");
     }
   });
+});
