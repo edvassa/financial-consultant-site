@@ -154,11 +154,7 @@ export default function Home() {
             >
               Блог
             </Button>
-            {isAuthenticated ? (
-              <Button variant="outline" onClick={() => setLocation("/dashboard")}>Админ-панель</Button>
-            ) : (
-              <Button variant="default" onClick={() => window.location.href = getLoginUrl() + '?redirect=/dashboard'}>Админ-панель</Button>
-            )}
+            {/* Admin button hidden from public - use /admin route instead */}
           </div>
         </div>
       </header>

@@ -14,6 +14,7 @@ import Blog from "./pages/Blog";
 import BlogArticle from "./pages/BlogArticle";
 import AdminBlog from "./pages/AdminBlog";
 import LearnMore from "./pages/LearnMore";
+import AdminLogin from "./pages/AdminLogin";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -28,6 +29,7 @@ function Router() {
       <Route path={"/blog/:slug"} component={BlogArticle} />
       <Route path={"/admin/blog"} component={AdminBlog} />
       <Route path={"/learn-more"} component={LearnMore} />
+      <Route path={"/admin"} component={AdminLogin} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

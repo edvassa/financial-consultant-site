@@ -84,9 +84,9 @@ export default function ContentManager() {
   const [saveMessage, setSaveMessage] = useState("");
 
   // Load content from database on mount
-  const { data: dbContent, isLoading } = trpc.content.get.useQuery(
+  const { data: dbContent, isLoading, refetch } = trpc.content.get.useQuery(
     { pageKey: "home" },
-    { enabled: isAuthenticated }
+    { enabled: isAuthenticated, staleTime: 0, gcTime: 0 }
   );
 
   useEffect(() => {
@@ -94,6 +94,13 @@ export default function ContentManager() {
       setFormData(dbContent);
     }
   }, [dbContent]);
+
+  // Refetch data when component mounts to ensure fresh data
+  useEffect(() => {
+    if (isAuthenticated) {
+      refetch();
+    }
+  }, [isAuthenticated, refetch]);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -164,6 +171,8 @@ export default function ContentManager() {
       });
       setSaveMessage("✅ Изменения сохранены!");
       setTimeout(() => setSaveMessage(""), 3000);
+      // Refetch data after save to ensure UI is in sync
+      setTimeout(() => refetch(), 500);
     } catch (error) {
       console.error("Save error:", error);
       setSaveMessage("❌ Ошибка при сохранении");
