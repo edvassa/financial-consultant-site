@@ -25,58 +25,58 @@ const DEFAULT_PRODUCTS = [
   {
     id: 2,
     name: "Унифицированные шаблоны",
+    price: 0,
     category: "digital",
     description: "Готовые формы для учета в малых компаниях",
     details: "Набор простых готовых форм для управления учетом в малых компаниях.",
-    showPrice: false,
   },
   {
     id: 3,
     name: "Разовая консультация",
+    price: 0,
     category: "service",
     description: "Онлайн-встреча 1.5-2 часа для обсуждения конкретных вопросов",
     details: "Онлайн-встреча (1.5-2 часа) для обсуждения конкретного вопроса или проблемы клиента. Включает предварительный просмотр документов.",
-    showPrice: false,
   },
   {
     id: 4,
     name: "Финансовый старт",
+    price: 0,
     category: "service",
     description: "Разработка простой финмодели для стартапа или микробизнеса",
     details: "Разработка и внедрение простой финансовой модели для стартапа или микробизнеса.",
-    showPrice: false,
   },
   {
     id: 5,
     name: "Постановка управленческого учета",
+    price: 0,
     category: "service",
     description: "Полное внедрение системы отчетности (P&L, Cash Flow, Balance)",
     details: "Разработка и внедрение системы отчетности (P&L, Cash Flow, Balance), настройка сбора данных, обучение владельца и/или сотрудников.",
-    showPrice: false,
   },
   {
     id: 6,
     name: "Помощь в привлечении финансирования",
+    price: 0,
     category: "service",
     description: "Подготовка документов для коммерческих банков при подаче заявки на кредит",
     details: "Подготовка документов для коммерческих банков при финансировании бизнеса.",
-    showPrice: false,
   },
   {
     id: 7,
     name: "Регламентированная отчетность",
+    price: 0,
     category: "service",
     description: "Подготовка и сдача отчетности в НБМ",
     details: "Подготовка и сдача отчетности для платежных обществ и небанковских кредитных организаций в НБМ.",
-    showPrice: false,
   },
   {
     id: 8,
     name: "Ежемесячный аутсорс финансового директора",
+    price: 0,
     category: "subscription",
     description: "Ежемесячный управленческий учет, анализ и стратегическая поддержка",
     details: "Ежемесячный управленческий учет, анализ результатов, регулярные встречи с владельцем для обсуждения результатов и планирования, помощь в стратегических решениях.",
-    showPrice: false,
   },
 ];
 
@@ -169,6 +169,7 @@ export default function Home() {
           <div className="text-2xl font-bold text-slate-900">FinDirector</div>
           <div className="flex gap-6 items-center">
             <div className="flex gap-4 text-sm text-slate-600">
+              <a href="https://www.linkedin.com/in/elenasolionaia/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 transition-colors">LinkedIn</a>
               <div>Email: edvassa@gmail.com</div>
               <div>+37369002909</div>
             </div>
