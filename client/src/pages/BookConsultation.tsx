@@ -218,7 +218,7 @@ export default function BookConsultation() {
               </Button>
 
               <p className="text-xs text-slate-500 text-center">
-                После подтверждения платежа я свяжусь с вами для согласования времени консультации.
+                После получения запроса я свяжусь с вами для согласования времени консультации.
               </p>
             </form>
           </CardContent>
