@@ -88,7 +88,7 @@ describe("Orders API", () => {
         customerName: "Test Customer",
         customerEmail: "customer@example.com",
         customerPhone: "+373 69 00 00 00",
-        price: 400,
+        price: "400",
         notes: "Test order",
       }),
     });

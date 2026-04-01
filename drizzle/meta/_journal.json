@@ -71,6 +71,13 @@
       "when": 1775045496371,
       "tag": "0009_next_earthquake",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1775047697489,
+      "tag": "0010_spicy_invisible_woman",
+      "breakpoints": true
     }
   ]
 }

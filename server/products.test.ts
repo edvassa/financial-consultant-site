@@ -72,7 +72,7 @@ describe("products router", () => {
     const result = await caller.products.create({
       name: "Test Product",
       description: "Test Description",
-      price: 100,
+      price: "100",
       category: "digital",
       isMonthly: 0,
       fileName: "test.pdf",
@@ -89,7 +89,7 @@ describe("products router", () => {
       await caller.products.create({
         name: "Test Product",
         description: "Test Description",
-        price: 100,
+        price: "100",
         category: "digital",
         isMonthly: 0,
         fileName: "test.pdf",
@@ -123,7 +123,7 @@ describe("products router", () => {
     const created = await caller.products.create({
       name: "Update Test Product",
       description: "Test Description",
-      price: 100,
+      price: "100",
       category: "digital",
       isMonthly: 0,
       fileName: "test.pdf",
@@ -135,12 +135,12 @@ describe("products router", () => {
       name: "Updated Product",
       description: "Updated Description",
       details: "Updated Details",
-      price: 250,
+      price: "250",
       category: "service",
       isMonthly: 0,
     });
 
-    expect(updated.price).toBe(250);
+    expect(updated.price).toBe("250");
     expect(updated.category).toBe("service");
     expect(updated.name).toBe("Updated Product");
   });
@@ -155,7 +155,7 @@ describe("products router", () => {
         name: "Updated",
         description: "Updated",
         details: "Updated",
-        price: 250,
+        price: "250",
         category: "service",
         isMonthly: 0,
       });
