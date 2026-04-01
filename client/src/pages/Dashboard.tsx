@@ -379,8 +379,15 @@ export default function Dashboard() {
                         )}
                         {product.details && (
                           <div className="mt-3 pt-3 border-t border-slate-200">
-                            <p className="text-xs font-semibold text-slate-700 mb-1">Details:</p>
-                            <p className="text-sm text-slate-600">{product.details}</p>
+                            <p className="text-xs font-semibold text-slate-700 mb-2">Details:</p>
+                            <div className="text-sm text-slate-600 space-y-1">
+                              {product.details.split('\n').filter((line: string) => line.trim()).map((line: string, idx: number) => (
+                                <div key={idx} className="flex gap-2">
+                                  <span className="text-green-700 font-bold">•</span>
+                                  <span>{line.replace(/^[•\-\*]\s*/, '').trim()}</span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>

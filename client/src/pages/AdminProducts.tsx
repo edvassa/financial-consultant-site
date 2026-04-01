@@ -112,7 +112,7 @@ export default function AdminProducts() {
     createProductMutation.mutate({
       name,
       description,
-      price: parseInt(price),
+      price: price,
       category,
       isMonthly: isMonthly ? 1 : 0,
       fileName: file?.name || null,
@@ -147,7 +147,7 @@ export default function AdminProducts() {
       name: editName,
       description: editDescription,
       details: editDetails,
-      price: parseInt(editPrice),
+      price: editPrice,
       category: editCategory,
       isMonthly: editIsMonthly ? 1 : 0,
     });
@@ -221,8 +221,8 @@ export default function AdminProducts() {
                     <Textarea
                       value={details}
                       onChange={(e) => setDetails(e.target.value)}
-                      placeholder="Полное описание (отображается в карточке)"
-                      rows={2}
+                      placeholder="Введите детали, каждый пункт с новой строки (начните с • или -)"
+                      rows={4}
                     />
                   </div>
 
