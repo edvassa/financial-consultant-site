@@ -152,6 +152,7 @@ export default function ContentManager() {
   };
 
   const saveContentMutation = trpc.content.upsert.useMutation();
+  const utils = trpc.useUtils();
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -163,6 +164,8 @@ export default function ContentManager() {
       });
       setSaveMessage("✅ Изменения сохранены!");
       setTimeout(() => setSaveMessage(""), 3000);
+      // Invalidate all content queries to force refresh everywhere
+      await utils.content.get.invalidate();
       // Refetch data after save to ensure UI is in sync
       setTimeout(() => refetch(), 500);
     } catch (error) {

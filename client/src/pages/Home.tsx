@@ -102,10 +102,14 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
 
-  // Load content from database
+  // Load content from database with automatic refresh
   const { data: dbContent, isLoading } = trpc.content.get.useQuery(
     { pageKey: "home" },
-    { retry: 1 }
+    { 
+      retry: 1,
+      refetchInterval: 5000, // Refresh every 5 seconds
+      refetchOnWindowFocus: true, // Refresh when window regains focus
+    }
   );
 
 
