@@ -120,18 +120,28 @@ export default function AdminProducts() {
   };
 
   const startEdit = (product: any) => {
+    console.log("startEdit - Product data:", product);
+    console.log("startEdit - Price value:", product.price, "Type:", typeof product.price);
     setEditingId(product.id);
     setEditName(product.name);
     setEditDescription(product.description || "");
     setEditDetails(product.details || "");
-    setEditPrice(product.price?.toString() || "");
+    // Ensure price is always a string, even if it's "0"
+    const priceStr = product.price !== null && product.price !== undefined ? String(product.price) : "";
+    console.log("startEdit - Setting editPrice to:", priceStr);
+    setEditPrice(priceStr);
     setEditCategory(product.category);
     setEditIsMonthly(product.isMonthly || false);
   };
 
   const handleUpdate = () => {
-    if (!editName || !editPrice || !editCategory) {
-      toast.error("Заполните все обязательные поля");
+    if (!editName || !editCategory) {
+      toast.error("Заполните все обязательные поля (Название и Категория)");
+      return;
+    }
+    // Price can be empty string initially, but should not be undefined
+    if (editPrice === undefined || editPrice === null) {
+      toast.error("Ошибка: Цена не загружена");
       return;
     }
 
