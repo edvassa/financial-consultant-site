@@ -87,6 +87,15 @@ const ICON_MAP: Record<string, any> = {
   "shield": Shield,
 };
 
+// Default content structure
+const DEFAULT_CONTENT = {
+  final_cta: {
+    section_title: "Готовы трансформировать ваш бизнес?",
+    subtitle: "Свяжитесь со мной, чтобы обсудить ваши финансовые потребства и найти идеальное решение для вашего бизнеса.",
+    button_text: "Связаться со мной",
+  },
+};
+
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
@@ -322,7 +331,7 @@ export default function Home() {
             className="bg-white text-green-700 hover:bg-slate-100"
             onClick={() => setLocation("/book-consultation")}
           >
-            {dbContent?.final_cta?.button_text || "Email: edvassa@gmail.com"}
+            {DEFAULT_CONTENT.final_cta.button_text}
           </Button>
         </div>
       </section>

@@ -32,7 +32,7 @@ const DEFAULT_CONTENT = {
   final_cta: {
     section_title: "Готовы трансформировать ваш бизнес?",
     subtitle: "Свяжитесь со мной, чтобы обсудить ваши финансовые потребства и найти идеальное решение для вашего бизнеса.",
-    button_text: "Email: edvassa@gmail.com",
+    button_text: "Связаться со мной",
   },
   footer: {
     copyright: "© 2026 FinDirector. Все права защищены.",

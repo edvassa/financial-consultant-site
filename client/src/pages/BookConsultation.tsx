@@ -101,7 +101,7 @@ export default function BookConsultation() {
         </Button>
 
         <Card className="border-slate-200 bg-white">
-          <CardHeader className="bg-gradient-to-r from-green-700 to-green-600 text-white rounded-t-lg p-6">
+          <CardHeader className="bg-gradient-to-r from-green-700 to-green-600 text-white rounded-t-lg px-6 py-6">
             <CardTitle className="text-2xl">Забронировать консультацию</CardTitle>
             <CardDescription className="text-green-100">
               Давайте обсудим ваши финансовые потребности и найдем идеальное решение для вашего бизнеса
