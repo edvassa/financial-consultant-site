@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Search, Calendar, ArrowRight } from "lucide-react";
+import { Search, Calendar, ArrowRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -93,6 +93,14 @@ export default function Blog() {
       {/* Header */}
       <div className="bg-gradient-to-r from-green-700 to-green-600 text-white py-12 px-4">
         <div className="max-w-6xl mx-auto">
+          <Button
+            variant="ghost"
+            onClick={() => setLocation("/")}
+            className="mb-6 gap-2 text-green-100 hover:text-white hover:bg-green-600"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Назад на главную
+          </Button>
           <h1 className="text-4xl font-bold mb-4">Блог</h1>
           <p className="text-green-100 text-lg">
             Полезные советы и инсайты по финансовому управлению бизнесом

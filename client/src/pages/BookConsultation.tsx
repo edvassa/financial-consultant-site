@@ -100,8 +100,8 @@ export default function BookConsultation() {
           Назад
         </Button>
 
-        <Card className="border-slate-200 bg-white">
-          <CardHeader className="bg-gradient-to-r from-green-700 to-green-600 text-white rounded-t-lg">
+        <Card className="border-slate-200 bg-white -mt-2">
+          <CardHeader className="bg-gradient-to-r from-green-700 to-green-600 text-white rounded-t-lg pt-6">
             <CardTitle className="text-2xl">Забронировать консультацию</CardTitle>
             <CardDescription className="text-green-100">
               Давайте обсудим ваши финансовые потребности и найдем идеальное решение для вашего бизнеса
@@ -224,26 +224,7 @@ export default function BookConsultation() {
           </CardContent>
         </Card>
 
-        {/* Payment Info Card */}
-        <Card className="mt-8 border-slate-200 bg-blue-50">
-          <CardHeader>
-            <CardTitle className="text-slate-900">Реквизиты для оплаты</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <p className="text-slate-700">
-              <strong>IBAN:</strong> MD93ML022510000000007084
-            </p>
-            <p className="text-slate-700">
-              <strong>Получатель:</strong> ELVIAN TRADE PLUS S.R.L.
-            </p>
-            <p className="text-slate-700">
-              <strong>Валюта:</strong> MDL (Молдавский лей)
-            </p>
-            <p className="text-slate-600 mt-4">
-              После оплаты пожалуйста отправьте подтверждение на <strong>edvassa@gmail.com</strong> с деталями вашего заказа.
-            </p>
-          </CardContent>
-        </Card>
+
       </div>
     </div>
   );

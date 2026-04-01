@@ -163,7 +163,7 @@ export default function BlogArticle() {
             <img
               src={article.imageUrl}
               alt={article.title}
-              className="w-full h-auto object-contain max-h-96"
+              className="w-full h-auto object-cover"
             />
           </div>
         )}

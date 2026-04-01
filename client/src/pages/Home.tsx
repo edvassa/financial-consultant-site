@@ -352,10 +352,7 @@ export default function Home() {
                 <li>Email: edvassa@gmail.com</li>
               </ul>
             </div>
-            <div>
-              <h4 className="text-white font-bold mb-4">Реквизиты</h4>
-              <p className="text-sm">{dbContent?.payment?.iban || "MD93ML022510000000007084"}</p>
-            </div>
+
           </div>
           <div className="border-t border-slate-700 pt-8 text-center text-sm">
             <p>{dbContent?.footer?.copyright || "© 2026 FinDirector. Все права защищены."}</p>
