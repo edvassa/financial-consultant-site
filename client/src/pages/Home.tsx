@@ -196,9 +196,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Blog Section */}
-      <FeaturedBlog />
-
       {/* Contact Section */}
       <section className="bg-slate-900 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -307,6 +304,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Featured Blog Section */}
+      <FeaturedBlog />
 
       {/* Final CTA Section */}
       <section className="bg-green-700 text-white py-16">
