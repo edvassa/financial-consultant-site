@@ -315,13 +315,8 @@ export default function Home() {
                 <CardContent className="flex-1 flex flex-col">
                   <div className="space-y-4 flex-1 flex flex-col">
                     {product.details && (
-                      <div className="text-sm text-slate-600 space-y-2">
-                        {product.details.split('\n').filter((line: string) => line.trim()).map((line: string, idx: number) => (
-                          <div key={idx} className="flex gap-2">
-                            <span className="text-green-700 font-bold">•</span>
-                            <span>{line.replace(/^[•\-\*]\s*/, '').trim()}</span>
-                          </div>
-                        ))}
+                      <div className="text-sm text-slate-600 whitespace-pre-wrap">
+                        {product.details}
                       </div>
                     )}
                     {product.price && (
