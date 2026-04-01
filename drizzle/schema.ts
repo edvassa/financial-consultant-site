@@ -31,7 +31,7 @@ export const products = mysqlTable("products", {
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   details: text("details"),
-  price: int("price").notNull(), // Price in MDL
+  price: text("price").notNull(), // Price in MDL or text like 'Стоимость по запросу'
   category: mysqlEnum("category", ["digital", "service", "subscription"]).notNull(),
   isMonthly: int("isMonthly").default(0), // For subscriptions
   fileUrl: varchar("fileUrl", { length: 1024 }), // For digital products

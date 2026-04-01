@@ -28,7 +28,7 @@ export const appRouter = router({
         z.object({
           name: z.string(),
           description: z.string().optional(),
-          price: z.number(),
+          price: z.string(),
           category: z.enum(["digital", "service", "subscription"]),
           isMonthly: z.number().optional(),
           fileName: z.string().optional().nullable(),
@@ -55,7 +55,7 @@ export const appRouter = router({
           name: z.string().optional(),
           description: z.string().optional(),
           details: z.string().optional(),
-          price: z.number().optional(),
+          price: z.string().optional(),
           category: z.enum(["digital", "service", "subscription"]).optional(),
           isMonthly: z.number().optional(),
         })

@@ -228,13 +228,13 @@ export default function AdminProducts() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Цена (MDL) *
+                      Цена (MDL или текст) *
                     </label>
                     <Input
-                      type="number"
+                      type="text"
                       value={price}
                       onChange={(e) => setPrice(e.target.value)}
-                      placeholder="Цена в молдавских леях"
+                      placeholder="Например: 400 MDL или Стоимость по запросу"
                     />
                   </div>
 

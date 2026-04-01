@@ -43,6 +43,13 @@
       "when": 1774982022109,
       "tag": "0005_gigantic_manta",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1775044755494,
+      "tag": "0006_pink_kree",
+      "breakpoints": true
     }
   ]
 }
