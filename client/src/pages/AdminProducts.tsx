@@ -355,10 +355,10 @@ export default function AdminProducts() {
                                   Цена (MDL) *
                                 </label>
                                 <Input
-                                  type="number"
+                                  type="text"
                                   value={editPrice}
                                   onChange={(e) => setEditPrice(e.target.value)}
-                                  placeholder="Цена в молдавских леях"
+                                  placeholder="Например: 400 MDL или Стоимость по запросу"
                                   className="border-2 border-blue-300 bg-blue-50"
                                 />
                               </div>
