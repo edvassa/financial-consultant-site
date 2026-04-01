@@ -147,3 +147,8 @@
 - [x] Update Home.tsx to load content from database
 - [x] Verify content changes persist across sessions
 - [ ] Test "Learn More" PDF viewer functionality
+
+## Phase 15: Price Display Fix
+- [x] Hide price display when product price is 0
+- [x] Update Home.tsx to check `product.price > 0`
+- [x] Verify all tests still pass
