@@ -118,6 +118,23 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
+// Delete consultation booking
+router.delete("/:id", async (req, res) => {
+  try {
+    const db = await getDb();
+    if (!db) {
+      return res.status(500).json({ error: "Database not available" });
+    }
+    const bookingId = parseInt(req.params.id);
+    
+    await db.delete(consultationBookings).where(eq(consultationBookings.id, bookingId));
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting consultation:", error);
+    res.status(500).json({ error: "Failed to delete consultation" });
+  }
+});
+
 // Helper function to get consultation type label
 function getConsultationTypeLabel(type: string): string {
   const labels: Record<string, string> = {

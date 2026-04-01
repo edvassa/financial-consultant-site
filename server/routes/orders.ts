@@ -123,4 +123,21 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
+// Delete order
+router.delete("/:id", async (req, res) => {
+  try {
+    const db = await getDb();
+    if (!db) {
+      return res.status(500).json({ error: "Database not available" });
+    }
+    const orderId = parseInt(req.params.id);
+    
+    await db.delete(orders).where(eq(orders.id, orderId));
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    res.status(500).json({ error: "Failed to delete order" });
+  }
+});
+
 export default router;
