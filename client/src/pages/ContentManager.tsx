@@ -241,8 +241,23 @@ export default function ContentManager() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
+                    {/* Editable section title */}
+                    {sectionData.section_title && (
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                          Название раздела
+                        </label>
+                        <input
+                          type="text"
+                          value={sectionData.section_title || ""}
+                          onChange={(e) => handleFieldChange("section_title", e.target.value)}
+                          className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="Введите название раздела"
+                        />
+                      </div>
+                    )}
                     {Object.entries(sectionData).map(([key, value]: [string, any]) => {
-                      if (key === "file_url" || key === "file_type" || key === "og_image") return null;
+                      if (key === "file_url" || key === "file_type" || key === "og_image" || key === "section_title") return null;
                       
                       const label = key
                         .replace(/_/g, " ")
