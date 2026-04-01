@@ -316,7 +316,7 @@ export default function Home() {
                     {product.details && (
                       <p className="text-sm text-slate-600">{product.details}</p>
                     )}
-                    {product.price && (
+                    {product.price && product.price > 0 && (
                       <div className="text-2xl font-bold text-green-700">{product.price} MDL</div>
                     )}
                     <Button
