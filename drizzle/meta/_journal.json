@@ -43,6 +43,34 @@
       "when": 1774982022109,
       "tag": "0005_gigantic_manta",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1775044755494,
+      "tag": "0006_pink_kree",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1775045336432,
+      "tag": "0007_keen_mattie_franklin",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1775045400349,
+      "tag": "0008_big_mac_gargan",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1775045496371,
+      "tag": "0009_next_earthquake",
+      "breakpoints": true
     }
   ]
 }

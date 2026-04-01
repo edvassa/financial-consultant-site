@@ -232,7 +232,7 @@ export default function Dashboard() {
                         <div>
                           <CardTitle className="text-slate-900">{product.name}</CardTitle>
                           <CardDescription>
-                            {product.price.toLocaleString()} MDL • {product.category}
+                            {product.price ? (typeof product.price === 'number' ? product.price.toLocaleString() + ' MDL' : product.price) : 'Стоимость по запросу'} • {product.category}
                           </CardDescription>
                         </div>
                         <div className="flex gap-2">
@@ -414,7 +414,7 @@ export default function Dashboard() {
                         </div>
                         <div className="text-right">
                           <div className="text-lg font-bold text-green-700">
-                            {order.price.toLocaleString()} MDL
+                            {order.price ? (typeof order.price === 'number' ? order.price.toLocaleString() : order.price) + ' MDL' : 'Не указана'}
                           </div>
                           <div className={`text-xs font-semibold ${
                             order.status === "paid"
