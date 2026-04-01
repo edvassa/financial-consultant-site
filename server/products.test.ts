@@ -114,3 +114,53 @@ describe("products router", () => {
     }
   });
 });
+
+  it("should allow admin to update product price and category", async () => {
+    const ctx = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+
+    // First create a product
+    const created = await caller.products.create({
+      name: "Update Test Product",
+      description: "Test Description",
+      price: 100,
+      category: "digital",
+      isMonthly: 0,
+      fileName: "test.pdf",
+    });
+
+    // Then update it
+    const updated = await caller.products.update({
+      id: created.id,
+      name: "Updated Product",
+      description: "Updated Description",
+      details: "Updated Details",
+      price: 250,
+      category: "service",
+      isMonthly: 0,
+    });
+
+    expect(updated.price).toBe(250);
+    expect(updated.category).toBe("service");
+    expect(updated.name).toBe("Updated Product");
+  });
+
+  it("should prevent non-admin from updating products", async () => {
+    const ctx = createUserContext();
+    const caller = appRouter.createCaller(ctx);
+
+    try {
+      await caller.products.update({
+        id: 1,
+        name: "Updated",
+        description: "Updated",
+        details: "Updated",
+        price: 250,
+        category: "service",
+        isMonthly: 0,
+      });
+      expect.fail("Should have thrown an error");
+    } catch (error: any) {
+      expect(error.message).toContain("admin");
+    }
+  });

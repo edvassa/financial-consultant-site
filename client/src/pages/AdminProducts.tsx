@@ -135,6 +135,13 @@ export default function AdminProducts() {
       return;
     }
 
+    console.log("Updating product:", {
+      id: editingId,
+      name: editName,
+      price: editPrice,
+      category: editCategory,
+    });
+
     updateProductMutation.mutate({
       id: editingId!,
       name: editName,
@@ -345,23 +352,24 @@ export default function AdminProducts() {
 
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                  Цена (MDL)
+                                  Цена (MDL) *
                                 </label>
                                 <Input
                                   type="number"
                                   value={editPrice}
                                   onChange={(e) => setEditPrice(e.target.value)}
-                                  placeholder="Цена"
+                                  placeholder="Цена в молдавских леях"
+                                  className="border-2 border-blue-300 bg-blue-50"
                                 />
                               </div>
 
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                  Категория
+                                  Категория *
                                 </label>
                                 <Select value={editCategory} onValueChange={(value: any) => setEditCategory(value)}>
-                                  <SelectTrigger>
-                                    <SelectValue />
+                                  <SelectTrigger className="border-2 border-blue-300 bg-blue-50">
+                                    <SelectValue placeholder="Выберите категорию" />
                                   </SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="digital">Цифровой продукт</SelectItem>

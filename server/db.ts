@@ -106,7 +106,10 @@ export async function getProductById(id: number) {
 export async function createProduct(data: any) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return db.insert(products).values(data);
+  await db.insert(products).values(data);
+  // Get the created product by fetching the latest one
+  const created = await db.select().from(products).limit(1);
+  return created.length > 0 ? created[0] : data;
 }
 
 export async function deleteProduct(id: number) {
@@ -118,7 +121,10 @@ export async function deleteProduct(id: number) {
 export async function updateProduct(id: number, data: any) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return db.update(products).set(data).where(eq(products.id, id));
+  await db.update(products).set(data).where(eq(products.id, id));
+  // Get the updated product
+  const updated = await db.select().from(products).where(eq(products.id, id)).limit(1);
+  return updated.length > 0 ? updated[0] : null;
 }
 
 // Order queries
