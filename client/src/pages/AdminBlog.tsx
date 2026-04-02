@@ -73,6 +73,69 @@ export default function AdminBlog() {
     }
   };
 
+  const handleContentPaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        e.preventDefault();
+        const file = items[i].getAsFile();
+        if (file) {
+          try {
+            // Show loading toast
+            const toastId = toast.loading('Загрузка изображения...');
+            
+            // Read file as base64
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+              const base64 = event.target?.result?.toString().split(',')[1];
+              const mimeType = file.type;
+
+              try {
+                // Upload image to server
+                const response = await fetch('/api/blog/upload-image', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    imageBase64: base64,
+                    imageMimeType: mimeType,
+                  }),
+                });
+
+                if (response.ok) {
+                  const data = await response.json();
+                  const imageUrl = data.url;
+
+                  // Insert markdown image syntax at cursor position
+                  const textarea = e.currentTarget;
+                  const start = textarea.selectionStart;
+                  const end = textarea.selectionEnd;
+                  const newContent =
+                    formData.content.substring(0, start) +
+                    `\n![image](${imageUrl})\n` +
+                    formData.content.substring(end);
+
+                  setFormData({ ...formData, content: newContent });
+                  toast.success('Изображение вставлено', { id: toastId });
+                } else {
+                  toast.error('Ошибка при загрузке изображения', { id: toastId });
+                }
+              } catch (error) {
+                console.error('Error uploading image:', error);
+                toast.error('Ошибка при загрузке изображения', { id: toastId });
+              }
+            };
+            reader.readAsDataURL(file);
+          } catch (error) {
+            console.error('Error processing pasted image:', error);
+            toast.error('Ошибка при обработке изображения');
+          }
+        }
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -303,7 +366,8 @@ export default function AdminBlog() {
                   <textarea
                     value={formData.content}
                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    placeholder="Введите содержание статьи"
+                    onPaste={handleContentPaste}
+                    placeholder="Введите содержание статьи (Ctrl+V для вставки изображений)"
                     rows={10}
                     className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   />

@@ -231,4 +231,32 @@ router.get("/admin/:id", async (req, res) => {
   }
 });
 
+// Admin: Upload image for blog content (Ctrl+V paste)
+router.post("/upload-image", async (req: Request, res: Response) => {
+  try {
+    const { imageBase64, imageMimeType } = req.body;
+
+    if (!imageBase64) {
+      return res.status(400).json({ error: "Missing image data" });
+    }
+
+    try {
+      const buffer = Buffer.from(imageBase64, 'base64');
+      const fileName = `blog-content-${Date.now()}.jpg`;
+      const { url } = await storagePut(
+        `blog-images/${fileName}`,
+        buffer,
+        imageMimeType || 'image/jpeg'
+      );
+      res.json({ success: true, url });
+    } catch (uploadError) {
+      console.error("Error uploading image:", uploadError);
+      return res.status(500).json({ error: "Failed to upload image" });
+    }
+  } catch (error) {
+    console.error("Error in upload-image endpoint:", error);
+    res.status(500).json({ error: "Failed to upload image" });
+  }
+});
+
 export default router;
