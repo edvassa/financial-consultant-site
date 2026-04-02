@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+'use client';
+import { useRef, useState, useEffect } from 'react';
 import { useLocation } from "wouter";
 import { Plus, Edit2, Trash2, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ export default function AdminBlog() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -347,6 +349,7 @@ export default function AdminBlog() {
                     Содержание *
                   </label>
                   <textarea
+                    ref={contentTextareaRef}
                     value={formData.content}
                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                     onPaste={handleContentPaste}
@@ -381,21 +384,23 @@ export default function AdminBlog() {
                               if (response.ok) {
                                 const data = await response.json();
                                 const imageMarkdown = `![image](${data.url})`;
-                                const textarea = document.querySelector('textarea[placeholder*="Ctrl+V"]') as HTMLTextAreaElement;
+                                const textarea = contentTextareaRef.current;
                                 if (textarea) {
                                   const start = textarea.selectionStart || 0;
                                   const end = textarea.selectionEnd || 0;
-                                  const beforeText = formData.content.substring(0, start);
-                                  const afterText = formData.content.substring(end);
+                                  const currentContent = formData.content;
+                                  const beforeText = currentContent.substring(0, start);
+                                  const afterText = currentContent.substring(end);
                                   const newContent = beforeText + imageMarkdown + afterText;
                                   setFormData({ ...formData, content: newContent });
                                   toast.success('Изображение загружено');
                                 }
                               } else {
-                                toast.error('Ошибка при загрузке изображения');
+                                const errorData = await response.json().catch(() => ({ error: 'Неизвестная ошибка' }));
+                                toast.error('Ошибка: ' + (errorData.error || 'Не удалось загрузить изображение'));
                               }
                             } catch (error) {
-                              toast.error('Ошибка: ' + String(error).substring(0, 50));
+                              toast.error('Ошибка при загрузке: ' + String(error).substring(0, 50));
                             }
                           };
                           reader.readAsDataURL(file);
