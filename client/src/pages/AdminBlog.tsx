@@ -190,6 +190,49 @@ export default function AdminBlog() {
     setImageFile(null);
   };
 
+  const handleContentPaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          try {
+            const base64 = await new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.readAsDataURL(file);
+            });
+
+            const response = await fetch('/api/blog/upload-image', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ imageBase64: base64, imageMimeType: file.type }),
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              const imageMarkdown = `![image](${data.url})`;
+              const textarea = e.currentTarget;
+              const start = textarea.selectionStart;
+              const end = textarea.selectionEnd;
+              const newContent = formData.content.substring(0, start) + imageMarkdown + formData.content.substring(end);
+              setFormData({ ...formData, content: newContent });
+              toast.success('Изображение вставлено');
+            } else {
+              toast.error('Ошибка при загрузке изображения');
+            }
+          } catch (error) {
+            toast.error('Ошибка при обработке изображения');
+          }
+        }
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8">
       <div className="max-w-6xl mx-auto px-4">
@@ -303,7 +346,8 @@ export default function AdminBlog() {
                   <textarea
                     value={formData.content}
                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    placeholder="Введите содержание статьи"
+                    onPaste={handleContentPaste}
+                    placeholder="Введите содержание статьи (Ctrl+V для вставки изображений)"
                     rows={10}
                     className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
