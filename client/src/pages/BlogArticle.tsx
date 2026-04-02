@@ -85,8 +85,14 @@ export default function BlogArticle() {
       updateMetaTag('keywords', article.seoKeywords || '');
       updateOGTag('og:title', article.seoTitle || article.title);
       updateOGTag('og:description', article.seoDescription || article.excerpt || article.content.substring(0, 160));
+      updateOGTag('og:url', typeof window !== 'undefined' ? window.location.href : '');
+      updateOGTag('og:type', 'article');
+      updateOGTag('twitter:card', 'summary_large_image');
+      updateOGTag('twitter:title', article.seoTitle || article.title);
+      updateOGTag('twitter:description', article.seoDescription || article.excerpt || article.content.substring(0, 160));
       if (article.imageUrl) {
         updateOGTag('og:image', article.imageUrl);
+        updateOGTag('twitter:image', article.imageUrl);
       }
     }
   }, [article]);
