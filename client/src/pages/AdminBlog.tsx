@@ -12,28 +12,28 @@ import { useAuth } from '@/_core/hooks/useAuth';
 interface BlogFormData {
   title: string;
   slug: string;
-  description: string;
+  excerpt: string;
   content: string;
   seoTitle: string;
   seoDescription: string;
-  keywords: string;
+  seoKeywords: string;
   image: File | null;
   imageUrl?: string;
   published: boolean;
 }
 
-export function AdminBlog() {
+function AdminBlog() {
   const { user } = useAuth();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const [articles, setArticles] = useState<any[]>([]);
   const [formData, setFormData] = useState<BlogFormData>({
     title: '',
     slug: '',
-    description: '',
+    excerpt: '',
     content: '',
     seoTitle: '',
     seoDescription: '',
-    keywords: '',
+    seoKeywords: '',
     image: null,
     published: false,
   });
@@ -50,31 +50,18 @@ export function AdminBlog() {
 
   // Fetch all articles
   useEffect(() => {
-    const fetchArticles = async () => {
-      try {
-        const response = await fetch('/api/blog/admin/all');
-        if (response.ok) {
-          const data = await response.json();
-          setArticles(data);
-        }
-      } catch (error) {
-        console.error('Error fetching articles:', error);
-        toast.error('Ошибка при загрузке статей');
-      }
-    };
     fetchArticles();
   }, []);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setFormData((prev) => ({ ...prev, image: file }));
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setImageBase64(event.target?.result as string);
-        setFormData((prev) => ({ ...prev, imageUrl: event.target?.result as string }));
-      };
-      reader.readAsDataURL(file);
+  const fetchArticles = async () => {
+    try {
+      const response = await fetch('/api/blog/admin/all');
+      if (response.ok) {
+        const data = await response.json();
+        setArticles(data);
+      }
+    } catch (error) {
+      toast.error('Ошибка при загрузке статей');
     }
   };
 
@@ -86,43 +73,51 @@ export function AdminBlog() {
       const item = items[i];
       if (item.type.startsWith('image/')) {
         e.preventDefault();
-        const blob = item.getAsFile();
-        if (blob) {
+        const file = item.getAsFile();
+        if (file && item.type.startsWith('image/')) {
           try {
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-              const base64 = event.target?.result as string;
-              const formDataToSend = new FormData();
-              formDataToSend.append('image', base64);
+            const base64 = await new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.readAsDataURL(file);
+            });
 
-              const response = await fetch('/api/blog/upload-image', {
-                method: 'POST',
-                body: formDataToSend,
-              });
+            const formDataObj = new FormData();
+            formDataObj.append('image', base64);
 
-              if (response.ok) {
-                const { url } = await response.json();
-                const textarea = e.currentTarget;
-                const start = textarea.selectionStart;
-                const end = textarea.selectionEnd;
-                const currentContent = formData.content;
-                const newContent =
-                  currentContent.substring(0, start) +
-                  `![image](${url})` +
-                  currentContent.substring(end);
-                setFormData((prev) => ({ ...prev, content: newContent }));
-                toast.success('Изображение вставлено');
-              } else {
-                toast.error('Ошибка при загрузке изображения');
-              }
-            };
-            reader.readAsDataURL(blob);
+            const response = await fetch('/api/blog/upload-image', {
+              method: 'POST',
+              body: formDataObj,
+            });
+
+            if (response.ok) {
+              const result = await response.json();
+              const imageMarkdown = `![image](${result.url})`;
+              setFormData(prev => ({
+                ...prev,
+                content: prev.content + '\n' + imageMarkdown,
+              }));
+              toast.success('Изображение загружено');
+            } else {
+              toast.error('Ошибка при загрузке изображения');
+            }
           } catch (error) {
-            console.error('Error uploading image:', error);
-            toast.error('Ошибка при загрузке изображения');
+            toast.error('Ошибка при обработке изображения');
           }
         }
       }
+    }
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setImageBase64(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+      setFormData(prev => ({ ...prev, image: file }));
     }
   };
 
@@ -131,59 +126,40 @@ export function AdminBlog() {
     setLoading(true);
 
     try {
-      const payload = {
-        title: formData.title,
-        slug: formData.slug,
-        description: formData.description,
-        content: formData.content,
-        seoTitle: formData.seoTitle,
-        seoDescription: formData.seoDescription,
-        keywords: formData.keywords,
-        published: formData.published ? 1 : 0,
-        ...(imageBase64 && { imageBase64 }),
+      const submitData = {
+        ...formData,
+        image: imageBase64,
       };
 
-      let response;
-      if (editingId) {
-        response = await fetch(`/api/blog/admin/${editingId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-      } else {
-        response = await fetch('/api/blog/admin', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-      }
+      const url = editingId ? `/api/blog/admin/${editingId}` : '/api/blog/admin/create';
+      const method = editingId ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submitData),
+      });
 
       if (response.ok) {
         toast.success(editingId ? 'Статья обновлена' : 'Статья создана');
         setFormData({
           title: '',
           slug: '',
-          description: '',
+          excerpt: '',
           content: '',
           seoTitle: '',
           seoDescription: '',
-          keywords: '',
+          seoKeywords: '',
           image: null,
           published: false,
         });
-        setEditingId(null);
         setImageBase64('');
-        // Refresh articles list
-        const articlesResponse = await fetch('/api/blog/admin/all');
-        if (articlesResponse.ok) {
-          const data = await articlesResponse.json();
-          setArticles(data);
-        }
+        setEditingId(null);
+        fetchArticles();
       } else {
-        toast.error('Ошибка при сохранении статьи');
+        toast.error('Ошибка при сохранении');
       }
     } catch (error) {
-      console.error('Error saving article:', error);
       toast.error('Ошибка при сохранении статьи');
     } finally {
       setLoading(false);
@@ -196,21 +172,22 @@ export function AdminBlog() {
       if (response.ok) {
         const article = await response.json();
         setFormData({
-          title: article.title,
-          slug: article.slug,
-          description: article.excerpt,
-          content: article.content,
+          title: article.title || '',
+          slug: article.slug || '',
+          excerpt: article.excerpt || '',
+          content: article.content || '',
           seoTitle: article.seoTitle || '',
           seoDescription: article.seoDescription || '',
-          keywords: article.seoKeywords || '',
+          seoKeywords: article.seoKeywords || '',
           image: null,
           imageUrl: article.imageUrl,
           published: article.published === 1,
         });
+        setImageBase64(article.imageUrl || '');
         setEditingId(id);
+        window.scrollTo(0, 0);
       }
     } catch (error) {
-      console.error('Error fetching article:', error);
       toast.error('Ошибка при загрузке статьи');
     }
   };
@@ -219,18 +196,14 @@ export function AdminBlog() {
     if (!confirm('Вы уверены?')) return;
 
     try {
-      const response = await fetch(`/api/blog/admin/${id}`, {
-        method: 'DELETE',
-      });
-
+      const response = await fetch(`/api/blog/admin/${id}`, { method: 'DELETE' });
       if (response.ok) {
         toast.success('Статья удалена');
-        setArticles(articles.filter((a) => a.id !== id));
+        fetchArticles();
       } else {
-        toast.error('Ошибка при удалении статьи');
+        toast.error('Ошибка при удалении');
       }
     } catch (error) {
-      console.error('Error deleting article:', error);
       toast.error('Ошибка при удалении статьи');
     }
   };
@@ -239,40 +212,31 @@ export function AdminBlog() {
     setFormData({
       title: '',
       slug: '',
-      description: '',
+      excerpt: '',
       content: '',
       seoTitle: '',
       seoDescription: '',
-      keywords: '',
+      seoKeywords: '',
       image: null,
       published: false,
     });
-    setEditingId(null);
     setImageBase64('');
+    setEditingId(null);
   };
 
-  if (!user || user.role !== 'admin') {
-    return <div>Доступ запрещен</div>;
-  }
-
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto p-4 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Управление блогом</h1>
-        <button
-          onClick={() => setLocation('/admin')}
-          className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-        >
+        <Button onClick={() => setLocation('/admin')} variant="outline">
           Назад в панель
-        </button>
+        </Button>
       </div>
-
-      <p className="text-gray-600">Добавляйте, редактируйте и удаляйте статьи</p>
 
       {/* Form */}
       <Card>
         <CardHeader>
-          <CardTitle>{editingId ? 'Редактировать статью' : 'Добавить новую статью'}</CardTitle>
+          <CardTitle>{editingId ? 'Редактировать статью' : 'Новая статья'}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -301,22 +265,17 @@ export function AdminBlog() {
               <label className="text-sm font-medium">Краткое описание</label>
               <Input
                 placeholder="Краткое описание для превью"
-                value={formData.description}
-                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                value={formData.excerpt}
+                onChange={(e) => setFormData((prev) => ({ ...prev, excerpt: e.target.value }))}
               />
             </div>
 
             <div>
               <label className="text-sm font-medium">Изображение</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="w-full"
-              />
-              {formData.imageUrl && (
+              <Input type="file" accept="image/*" onChange={handleImageChange} />
+              {imageBase64 && (
                 <img
-                  src={formData.imageUrl}
+                  src={imageBase64}
                   alt="Preview"
                   className="mt-2 w-full h-32 object-cover rounded"
                 />
@@ -369,8 +328,8 @@ export function AdminBlog() {
                 <label className="text-sm font-medium">SEO ключевые слова</label>
                 <Input
                   placeholder="финансовый консультант, инвестиции, планирование"
-                  value={formData.keywords}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, keywords: e.target.value }))}
+                  value={formData.seoKeywords}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, seoKeywords: e.target.value }))}
                 />
               </div>
             </div>
@@ -389,20 +348,12 @@ export function AdminBlog() {
             </div>
 
             <div className="flex gap-2">
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-              >
+              <Button type="submit" disabled={loading}>
                 {loading ? 'Сохранение...' : 'Сохранить'}
-              </button>
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-              >
+              </Button>
+              <Button type="button" onClick={handleCancel} variant="outline">
                 Отмена
-              </button>
+              </Button>
             </div>
           </form>
         </CardContent>
@@ -426,18 +377,20 @@ export function AdminBlog() {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <button
+                  <Button
                     onClick={() => handleEdit(article.id)}
-                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                    variant="default"
+                    size="sm"
                   >
                     Редактировать
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={() => handleDelete(article.id)}
-                    className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                    variant="destructive"
+                    size="sm"
                   >
                     Удалить
-                  </button>
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -447,3 +400,5 @@ export function AdminBlog() {
     </div>
   );
 }
+
+export default AdminBlog;
