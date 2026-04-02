@@ -83,7 +83,7 @@ router.post("/admin/create", async (req: Request, res: Response) => {
       return res.status(500).json({ error: "Database not available" });
     }
 
-    const { title, slug, content, excerpt, published, imageBase64, imageMimeType, seoTitle, seoDescription, seoKeywords } = req.body;
+    const { title, slug, content, excerpt, published, imageBase64, imageMimeType } = req.body;
 
     if (!title || !slug || !content) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -118,9 +118,6 @@ router.post("/admin/create", async (req: Request, res: Response) => {
       imageUrl,
       imageKey,
       published: published ? 1 : 0,
-      seoTitle: seoTitle || null,
-      seoDescription: seoDescription || null,
-      seoKeywords: seoKeywords || null,
     });
 
     res.status(201).json({ success: true, id: result[0] });
@@ -138,7 +135,7 @@ router.patch("/admin/:id", async (req: Request, res: Response) => {
       return res.status(500).json({ error: "Database not available" });
     }
 
-    const { title, slug, content, excerpt, published, imageBase64, imageMimeType, seoTitle, seoDescription, seoKeywords } = req.body;
+    const { title, slug, content, excerpt, published, imageBase64, imageMimeType } = req.body;
     const articleId = parseInt(req.params.id);
 
     const updates: any = {};
@@ -147,9 +144,6 @@ router.patch("/admin/:id", async (req: Request, res: Response) => {
     if (content !== undefined) updates.content = content;
     if (excerpt !== undefined) updates.excerpt = excerpt;
     if (published !== undefined) updates.published = published ? 1 : 0;
-    if (seoTitle !== undefined) updates.seoTitle = seoTitle || null;
-    if (seoDescription !== undefined) updates.seoDescription = seoDescription || null;
-    if (seoKeywords !== undefined) updates.seoKeywords = seoKeywords || null;
 
     // Handle image upload
     if (imageBase64) {
@@ -234,34 +228,6 @@ router.get("/admin/:id", async (req, res) => {
   } catch (error) {
     console.error("Error fetching article:", error);
     res.status(500).json({ error: "Failed to fetch article" });
-  }
-});
-
-// Admin: Upload image for blog content (Ctrl+V paste)
-router.post("/upload-image", async (req: Request, res: Response) => {
-  try {
-    const { imageBase64, imageMimeType } = req.body;
-
-    if (!imageBase64) {
-      return res.status(400).json({ error: "Missing image data" });
-    }
-
-    try {
-      const buffer = Buffer.from(imageBase64, 'base64');
-      const fileName = `blog-content-${Date.now()}.jpg`;
-      const { url } = await storagePut(
-        `blog-images/${fileName}`,
-        buffer,
-        imageMimeType || 'image/jpeg'
-      );
-      res.json({ success: true, url });
-    } catch (uploadError) {
-      console.error("Error uploading image:", uploadError);
-      return res.status(500).json({ error: "Failed to upload image" });
-    }
-  } catch (error) {
-    console.error("Error in upload-image endpoint:", error);
-    res.status(500).json({ error: "Failed to upload image" });
   }
 });
 
