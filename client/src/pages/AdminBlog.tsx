@@ -217,16 +217,19 @@ export default function AdminBlog() {
               const data = await response.json();
               const imageMarkdown = `![image](${data.url})`;
               const textarea = e.currentTarget;
-              const start = textarea.selectionStart;
-              const end = textarea.selectionEnd;
-              const newContent = formData.content.substring(0, start) + imageMarkdown + formData.content.substring(end);
+              const start = textarea.selectionStart || 0;
+              const end = textarea.selectionEnd || 0;
+              const beforeText = formData.content.substring(0, start);
+              const afterText = formData.content.substring(end);
+              const newContent = beforeText + imageMarkdown + afterText;
               setFormData({ ...formData, content: newContent });
               toast.success('Изображение вставлено');
             } else {
-              toast.error('Ошибка при загрузке изображения');
+              const errorData = await response.json().catch(() => ({}));
+              toast.error('Ошибка: ' + (errorData.error || 'Не удалось загрузить изображение'));
             }
           } catch (error) {
-            toast.error('Ошибка при обработке изображения');
+            toast.error('Ошибка: ' + String(error).substring(0, 50));
           }
         }
       }
@@ -351,6 +354,57 @@ export default function AdminBlog() {
                     rows={10}
                     className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
+                  <div className="mt-3 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('content-image-input')?.click()}
+                      className="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium"
+                    >
+                      📎 Загрузить изображение
+                    </button>
+                    <input
+                      id="content-image-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = async () => {
+                            const base64 = reader.result as string;
+                            try {
+                              const response = await fetch('/api/blog/upload-image', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ imageBase64: base64, imageMimeType: file.type }),
+                              });
+                              if (response.ok) {
+                                const data = await response.json();
+                                const imageMarkdown = `![image](${data.url})`;
+                                const textarea = document.querySelector('textarea[placeholder*="Ctrl+V"]') as HTMLTextAreaElement;
+                                if (textarea) {
+                                  const start = textarea.selectionStart || 0;
+                                  const end = textarea.selectionEnd || 0;
+                                  const beforeText = formData.content.substring(0, start);
+                                  const afterText = formData.content.substring(end);
+                                  const newContent = beforeText + imageMarkdown + afterText;
+                                  setFormData({ ...formData, content: newContent });
+                                  toast.success('Изображение загружено');
+                                }
+                              } else {
+                                toast.error('Ошибка при загрузке изображения');
+                              }
+                            } catch (error) {
+                              toast.error('Ошибка: ' + String(error).substring(0, 50));
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="hidden"
+                    />
+                    <span className="text-xs text-slate-500">или используйте Ctrl+V</span>
+                  </div>
                 </div>
 
                 {/* SEO Section */}
