@@ -27,7 +27,9 @@ export async function setupVite(app: Express, server: Server) {
   app.use(vite.middlewares);
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
-    console.log('[SSR] Processing URL:', url);
+    const userAgent = req.get('user-agent') || '';
+    const host = req.get('host') || '';
+    console.log('[SSR] Processing URL:', url, '| Host:', host, '| UA:', userAgent.substring(0, 50));
 
     try {
       const clientTemplate = path.resolve(
@@ -74,6 +76,7 @@ export async function setupVite(app: Express, server: Server) {
             
             if (articles.length > 0) {
               const article = articles[0];
+              console.log('[SSR] Found article:', article.title);
               const articleData = {
                 title: article.seoTitle || article.title,
                 description: article.seoDescription || article.excerpt || article.content.substring(0, 160),
@@ -81,6 +84,7 @@ export async function setupVite(app: Express, server: Server) {
                 url: `https://${req.get('host')}/blog/${article.slug}`,
                 keywords: article.seoKeywords || '',
               };
+              console.log('[SSR] Article data:', { title: articleData.title, image: articleData.image });
               template = injectBlogMetaTags(template, articleData);
               
               // If this is a social media crawler, return preview HTML directly without React
@@ -89,6 +93,8 @@ export async function setupVite(app: Express, server: Server) {
                 res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
                 return;
               }
+            } else {
+              console.log('[SSR] Article not found for slug:', slug);
             }
           }
         } catch (error) {

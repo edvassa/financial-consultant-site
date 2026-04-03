@@ -5,6 +5,17 @@ import { getDb } from "../db";
 import { blogArticles } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 
+function escapeHtml(text: string): string {
+  const map: { [key: string]: string } = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, (char) => map[char]);
+}
+
 export async function setupBlogSSR(app: Express) {
   // Middleware to inject dynamic OG tags for blog articles
   app.use(async (req: Request, res: Response, next: NextFunction) => {
@@ -58,21 +69,36 @@ export function injectBlogMetaTags(template: string, article?: any): string {
   
   let result = template;
   
-  // Helper function to replace or add meta tags
+  // Helper function to replace meta tags with flexible whitespace handling
   const replaceMetaTag = (html: string, property: string, value: string, isProperty: boolean = true): string => {
     const attr = isProperty ? 'property' : 'name';
-    const pattern = new RegExp(`(<meta\\s+${attr}="${property}"\\s+content=")[^"]*("\\s*/>)`, 'i');
+    const escapedValue = escapeHtml(value);
+    
+    // Create pattern that matches the meta tag with flexible whitespace
+    // This pattern handles: <meta property="og:title" content="..." /> or with newlines/spaces
+    const pattern = new RegExp(
+      `<meta\\s+${attr}\\s*=\\s*["\']${property}["\']\\s+content\\s*=\\s*["\'][^"']*["\']\\s*/?\\s*>`,
+      'i'
+    );
     
     if (pattern.test(html)) {
-      return html.replace(pattern, `$1${escapeHtml(value)}$2`);
+      console.log('[SSR] Found and replacing tag:', property);
+      // Replace with the new value
+      return html.replace(pattern, `<meta ${attr}="${property}" content="${escapedValue}" />`);
     }
     
-    // Try alternate pattern with newlines
-    const altPattern = new RegExp(`(<meta[\\s\\n]+${attr}="${property}"[\\s\\n]+content=")[^"]*("\\s*/>)`, 'i');
+    // Try alternate pattern with reversed attribute order
+    const altPattern = new RegExp(
+      `<meta\\s+content\\s*=\\s*["\'][^"']*["\']\\s+${attr}\\s*=\\s*["\']${property}["\']\\s*/?\\s*>`,
+      'i'
+    );
+    
     if (altPattern.test(html)) {
-      return html.replace(altPattern, `$1${escapeHtml(value)}$2`);
+      console.log('[SSR] Found and replacing tag (reversed order):', property);
+      return html.replace(altPattern, `<meta ${attr}="${property}" content="${escapedValue}" />`);
     }
     
+    console.log('[SSR] Tag not found for replacement:', property);
     return html;
   };
   
@@ -104,15 +130,4 @@ export function injectBlogMetaTags(template: string, article?: any): string {
   
   console.log('[SSR] Meta tags injection complete');
   return result;
-}
-
-function escapeHtml(text: string): string {
-  const map: { [key: string]: string } = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  };
-  return text.replace(/[&<>"']/g, (char) => map[char]);
 }
