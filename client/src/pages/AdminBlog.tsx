@@ -1,4 +1,5 @@
 'use client';
+
 import { useRef, useState, useEffect } from 'react';
 import { useLocation } from "wouter";
 import { Plus, Edit2, Trash2, X, Check } from "lucide-react";
@@ -203,12 +204,15 @@ export default function AdminBlog() {
         const file = item.getAsFile();
         if (file) {
           try {
-            const base64 = await new Promise<string>((resolve) => {
+            const dataUrl = await new Promise<string>((resolve) => {
               const reader = new FileReader();
               reader.onload = () => resolve(reader.result as string);
               reader.readAsDataURL(file);
             });
+            // Extract base64 part from data URL
+            const base64 = dataUrl.split(',')[1] || dataUrl;
 
+            console.log('Uploading image via Ctrl+V...', { fileName: file.name, mimeType: file.type });
             const response = await fetch('/api/blog/upload-image', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -217,21 +221,25 @@ export default function AdminBlog() {
 
             if (response.ok) {
               const data = await response.json();
+              console.log('Image uploaded successfully:', data);
               const imageMarkdown = `![image](${data.url})`;
+              // Get current cursor position from the textarea element
               const textarea = e.currentTarget;
               const start = textarea.selectionStart || 0;
               const end = textarea.selectionEnd || 0;
               const beforeText = formData.content.substring(0, start);
               const afterText = formData.content.substring(end);
               const newContent = beforeText + imageMarkdown + afterText;
-              setFormData({ ...formData, content: newContent });
+              setFormData(prev => ({ ...prev, content: newContent }));
               toast.success('Изображение вставлено');
             } else {
               const errorData = await response.json().catch(() => ({}));
+              console.error('Upload error:', errorData);
               toast.error('Ошибка: ' + (errorData.error || 'Не удалось загрузить изображение'));
             }
           } catch (error) {
-            toast.error('Ошибка: ' + String(error).substring(0, 50));
+            console.error('Paste error:', error);
+            toast.error('Ошибка при вставке: ' + String(error).substring(0, 100));
           }
         }
       }
@@ -248,6 +256,7 @@ export default function AdminBlog() {
             <Button
               onClick={() => setLocation("/dashboard")}
               variant="outline"
+              className="text-slate-700 border-slate-300 hover:bg-slate-100"
             >
               Назад в панель
             </Button>
@@ -255,24 +264,29 @@ export default function AdminBlog() {
           <p className="text-slate-600">Добавляйте, редактируйте и удаляйте статьи</p>
         </div>
 
-        {/* Create Button */}
-        {!showForm && (
+        {/* New Article Button */}
+        <div className="mb-8">
           <Button
-            onClick={() => setShowForm(true)}
-            className="mb-8 bg-green-700 hover:bg-green-800 gap-2"
+            onClick={() => {
+              setShowForm(true);
+              setEditingId(null);
+            }}
+            className="bg-green-600 hover:bg-green-700 text-white"
           >
-            <Plus className="h-5 w-5" />
+            <Plus className="w-4 h-4 mr-2" />
             Новая статья
           </Button>
-        )}
+        </div>
 
         {/* Form */}
         {showForm && (
-          <Card className="mb-8 border-slate-200 bg-white">
-            <CardHeader>
-              <CardTitle>{editingId ? "Редактировать статью" : "Новая статья"}</CardTitle>
+          <Card className="mb-8 border-slate-200 shadow-lg">
+            <CardHeader className="bg-gradient-to-r from-green-50 to-slate-50 border-b border-slate-200">
+              <CardTitle className="text-slate-900">
+                {editingId ? "Редактировать статью" : "Новая статья"}
+              </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Title */}
                 <div>
@@ -281,9 +295,11 @@ export default function AdminBlog() {
                   </label>
                   <Input
                     type="text"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     placeholder="Введите название статьи"
+                    value={formData.title}
+                    onChange={(e) =>
+                      setFormData({ ...formData, title: e.target.value })
+                    }
                     className="border-slate-300"
                   />
                 </div>
@@ -295,29 +311,32 @@ export default function AdminBlog() {
                   </label>
                   <Input
                     type="text"
-                    value={formData.slug}
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                     placeholder="finansovye-sovety"
+                    value={formData.slug}
+                    onChange={(e) =>
+                      setFormData({ ...formData, slug: e.target.value })
+                    }
                     className="border-slate-300"
                   />
-                  <p className="text-xs text-slate-500 mt-1">Используется в URL статьи</p>
                 </div>
 
                 {/* Excerpt */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Краткое описание
+                    Краткое описание для превью
                   </label>
                   <Input
                     type="text"
-                    value={formData.excerpt}
-                    onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
                     placeholder="Краткое описание для превью"
+                    value={formData.excerpt}
+                    onChange={(e) =>
+                      setFormData({ ...formData, excerpt: e.target.value })
+                    }
                     className="border-slate-300"
                   />
                 </div>
 
-                {/* Image Upload */}
+                {/* Image */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Изображение
@@ -374,8 +393,11 @@ export default function AdminBlog() {
                         if (file) {
                           const reader = new FileReader();
                           reader.onload = async () => {
-                            const base64 = reader.result as string;
+                            const dataUrl = reader.result as string;
+                            // Extract base64 part from data URL (remove 'data:image/png;base64,' prefix)
+                            const base64 = dataUrl.split(',')[1] || dataUrl;
                             try {
+                              console.log('Uploading image via button...', { fileName: file.name, mimeType: file.type });
                               const response = await fetch('/api/blog/upload-image', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -383,24 +405,22 @@ export default function AdminBlog() {
                               });
                               if (response.ok) {
                                 const data = await response.json();
+                                console.log('Image uploaded successfully:', data);
                                 const imageMarkdown = `![image](${data.url})`;
-                                const textarea = contentTextareaRef.current;
-                                if (textarea) {
-                                  const start = textarea.selectionStart || 0;
-                                  const end = textarea.selectionEnd || 0;
-                                  const currentContent = formData.content;
-                                  const beforeText = currentContent.substring(0, start);
-                                  const afterText = currentContent.substring(end);
-                                  const newContent = beforeText + imageMarkdown + afterText;
-                                  setFormData({ ...formData, content: newContent });
-                                  toast.success('Изображение загружено');
-                                }
+                                // Append to current content
+                                setFormData(prev => ({ 
+                                  ...prev, 
+                                  content: prev.content + '\n' + imageMarkdown 
+                                }));
+                                toast.success('Изображение загружено');
                               } else {
                                 const errorData = await response.json().catch(() => ({ error: 'Неизвестная ошибка' }));
+                                console.error('Upload failed:', errorData);
                                 toast.error('Ошибка: ' + (errorData.error || 'Не удалось загрузить изображение'));
                               }
                             } catch (error) {
-                              toast.error('Ошибка при загрузке: ' + String(error).substring(0, 50));
+                              console.error('Button upload error:', error);
+                              toast.error('Ошибка при загрузке: ' + String(error).substring(0, 100));
                             }
                           };
                           reader.readAsDataURL(file);
@@ -419,65 +439,47 @@ export default function AdminBlog() {
                   {/* SEO Title */}
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      SEO заголовок (до 60 символов)
+                      Заголовок для поисковых систем
                     </label>
-                    <div className="relative">
-                      <Input
-                        type="text"
-                        value={formData.seoTitle}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            seoTitle: e.target.value.slice(0, 60),
-                          })
-                        }
-                        placeholder="Заголовок для поисковых систем"
-                        className="border-slate-300"
-                        maxLength={60}
-                      />
-                      <span className="absolute right-3 top-3 text-xs text-slate-500">
-                        {formData.seoTitle.length}/60
-                      </span>
-                    </div>
+                    <Input
+                      type="text"
+                      placeholder="Заголовок для поисковых систем"
+                      value={formData.seoTitle}
+                      onChange={(e) =>
+                        setFormData({ ...formData, seoTitle: e.target.value })
+                      }
+                      className="border-slate-300"
+                    />
                   </div>
 
                   {/* SEO Description */}
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      SEO описание (до 160 символов)
+                      Описание для поисковых систем
                     </label>
-                    <div className="relative">
-                      <textarea
-                        value={formData.seoDescription}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            seoDescription: e.target.value.slice(0, 160),
-                          })
-                        }
-                        placeholder="Описание для поисковых систем"
-                        rows={3}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                        maxLength={160}
-                      />
-                      <span className="absolute right-3 bottom-3 text-xs text-slate-500">
-                        {formData.seoDescription.length}/160
-                      </span>
-                    </div>
+                    <textarea
+                      placeholder="Описание для поисковых систем"
+                      value={formData.seoDescription}
+                      onChange={(e) =>
+                        setFormData({ ...formData, seoDescription: e.target.value })
+                      }
+                      rows={3}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
                   </div>
 
                   {/* SEO Keywords */}
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      SEO ключевые слова (через запятую)
+                      Ключевые слова
                     </label>
                     <Input
                       type="text"
+                      placeholder="финансовый консультант, инвестиции, планирование"
                       value={formData.seoKeywords}
                       onChange={(e) =>
                         setFormData({ ...formData, seoKeywords: e.target.value })
                       }
-                      placeholder="финансовый консультант, инвестиции, планирование"
                       className="border-slate-300"
                     />
                   </div>
@@ -486,13 +488,13 @@ export default function AdminBlog() {
                 {/* Published */}
                 <div className="flex items-center gap-2">
                   <input
-                    type="checkbox"
                     id="published"
+                    type="checkbox"
                     checked={formData.published}
                     onChange={(e) =>
                       setFormData({ ...formData, published: e.target.checked })
                     }
-                    className="w-4 h-4 rounded border-slate-300 text-green-700"
+                    className="w-4 h-4 rounded border-slate-300 text-green-600 focus:ring-green-500"
                   />
                   <label htmlFor="published" className="text-sm font-medium text-slate-700">
                     Опубликовать
@@ -500,21 +502,21 @@ export default function AdminBlog() {
                 </div>
 
                 {/* Buttons */}
-                <div className="flex gap-4 pt-4 border-t border-slate-200">
+                <div className="flex gap-3 pt-4">
                   <Button
                     type="submit"
-                    className="bg-green-700 hover:bg-green-800 gap-2"
+                    className="bg-green-600 hover:bg-green-700 text-white"
                   >
-                    <Check className="h-4 w-4" />
-                    {editingId ? "Сохранить" : "Создать"}
+                    <Check className="w-4 h-4 mr-2" />
+                    Сохранить
                   </Button>
                   <Button
                     type="button"
-                    variant="outline"
                     onClick={handleCancel}
-                    className="gap-2"
+                    variant="outline"
+                    className="text-slate-700 border-slate-300 hover:bg-slate-100"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="w-4 h-4 mr-2" />
                     Отмена
                   </Button>
                 </div>
@@ -524,31 +526,20 @@ export default function AdminBlog() {
         )}
 
         {/* Articles List */}
-        {loading ? (
-          <div className="text-center py-12">
-            <p className="text-slate-600">Загрузка статей...</p>
-          </div>
-        ) : articles.length === 0 ? (
-          <Card className="border-slate-200 bg-white">
-            <CardContent className="py-12 text-center">
-              <p className="text-slate-600 mb-4">Статьи еще не добавлены</p>
-              <Button
-                onClick={() => setShowForm(true)}
-                className="bg-green-700 hover:bg-green-800"
-              >
-                Создать первую статью
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-4">
-            {articles.map((article) => (
-              <Card
-                key={article.id}
-                className="border-slate-200 bg-white hover:shadow-md transition-shadow"
-              >
-                <CardContent className="p-6">
-                  <div className="flex gap-4 items-start">
+        <div className="space-y-4">
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-slate-600">Загрузка статей...</p>
+            </div>
+          ) : articles.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-slate-600">Статей еще нет. Создайте первую!</p>
+            </div>
+          ) : (
+            articles.map((article) => (
+              <Card key={article.id} className="border-slate-200 hover:shadow-md transition-shadow">
+                <CardContent className="pt-6">
+                  <div className="flex gap-4">
                     {article.imageUrl && (
                       <div className="w-24 h-24 rounded-lg overflow-hidden bg-slate-200 flex-shrink-0">
                         <img
@@ -558,63 +549,52 @@ export default function AdminBlog() {
                         />
                       </div>
                     )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <h3 className="text-lg font-semibold text-slate-900">
-                            {article.title}
-                          </h3>
-                          <p className="text-sm text-slate-500 mt-1">/{article.slug}</p>
-                          {article.excerpt && (
-                            <p className="text-sm text-slate-600 mt-2 line-clamp-2">
-                              {article.excerpt}
-                            </p>
-                          )}
-                          {article.seoKeywords && (
-                            <p className="text-xs text-slate-500 mt-2">
-                              <strong>Ключевые слова:</strong> {article.seoKeywords}
-                            </p>
-                          )}
-                          <div className="flex items-center gap-4 mt-3">
-                            <span
-                              className={`text-xs font-semibold px-2 py-1 rounded ${
-                                article.published
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-slate-100 text-slate-600"
-                              }`}
-                            >
-                              {article.published ? "Опубликовано" : "Черновик"}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex gap-2 flex-shrink-0">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(article)}
-                            className="gap-2"
-                          >
-                            <Edit2 className="h-4 w-4" />
-                            Редактировать
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDelete(article.id)}
-                            className="gap-2 text-red-600 hover:text-red-700 border-red-200 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            Удалить
-                          </Button>
-                        </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-slate-900 mb-1">
+                        {article.title}
+                      </h3>
+                      <p className="text-sm text-slate-600 mb-2">{article.slug}</p>
+                      <p className="text-sm text-slate-600 mb-3 line-clamp-2">
+                        {article.excerpt || article.content.substring(0, 100)}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full ${
+                            article.published
+                              ? "bg-green-100 text-green-700"
+                              : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          {article.published ? "Опубликовано" : "Черновик"}
+                        </span>
                       </div>
+                    </div>
+                    <div className="flex gap-2 flex-shrink-0">
+                      <Button
+                        onClick={() => handleEdit(article)}
+                        variant="outline"
+                        size="sm"
+                        className="text-slate-700 border-slate-300 hover:bg-slate-100"
+                      >
+                        <Edit2 className="w-4 h-4 mr-1" />
+                        Редактировать
+                      </Button>
+                      <Button
+                        onClick={() => handleDelete(article.id)}
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 border-red-300 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Удалить
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
