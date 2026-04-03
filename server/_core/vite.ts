@@ -10,6 +10,60 @@ import { getDb } from "../db";
 import { blogArticles } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 
+function createMinimalPreviewHtml(articleData: any): string {
+  return `<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${escapeHtml(articleData.title)}</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="${escapeHtml(articleData.description)}" />
+  <meta name="keywords" content="${escapeHtml(articleData.keywords)}" />
+  
+  <!-- Open Graph Tags -->
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="${escapeHtml(articleData.title)}" />
+  <meta property="og:description" content="${escapeHtml(articleData.description)}" />
+  <meta property="og:url" content="${escapeHtml(articleData.url)}" />
+  <meta property="og:site_name" content="FinDirector" />
+  <meta property="og:locale" content="ru_RU" />
+  ${articleData.image ? `<meta property="og:image" content="${escapeHtml(articleData.image)}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/jpeg" />` : ''}
+  
+  <!-- Twitter Card Tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${escapeHtml(articleData.title)}" />
+  <meta name="twitter:description" content="${escapeHtml(articleData.description)}" />
+  ${articleData.image ? `<meta name="twitter:image" content="${escapeHtml(articleData.image)}" />` : ''}
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="${escapeHtml(articleData.url)}" />
+</head>
+<body>
+  <p>Redirecting to article...</p>
+  <script>
+    // Redirect to actual article page after crawlers have read the meta tags
+    window.location.href = '${escapeHtml(articleData.url)}';
+  </script>
+</body>
+</html>`;
+}
+
+function escapeHtml(text: string): string {
+  const map: { [key: string]: string } = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, (char) => map[char]);
+}
+
 export async function setupVite(app: Express, server: Server) {
   const serverOptions = {
     middlewareMode: true,
@@ -47,16 +101,17 @@ export async function setupVite(app: Express, server: Server) {
       );
 
       // Check if this is a blog article request and inject dynamic OG tags
-      const blogMatch = url.match(/^\/blog\/([a-zA-Z0-9\-]+)/);
+      // Match any slug including spaces and special characters (URL-encoded)
+      const blogMatch = url.match(/^\/blog\/([^/?]+)/);
       if (blogMatch) {
-        const slug = blogMatch[1];
+        let slug = blogMatch[1];
+        // Decode URL-encoded slug (e.g., theoryof%20games -> theoryof games)
+        slug = decodeURIComponent(slug);
         console.log('[SSR] Processing blog article:', slug);
         
         // Detect social media crawlers
-        const userAgent = req.get('user-agent') || '';
         const isSocialMediaCrawler = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegram|pinterest|slack|discord|opengraph|curl|wget/i.test(userAgent);
         
-        console.log('[SSR] User-Agent:', userAgent);
         console.log('[SSR] Is social media crawler:', isSocialMediaCrawler);
         
         // Disable caching for blog pages so social media crawlers get fresh meta tags
@@ -77,22 +132,29 @@ export async function setupVite(app: Express, server: Server) {
             if (articles.length > 0) {
               const article = articles[0];
               console.log('[SSR] Found article:', article.title);
+              // Get the correct domain - prefer X-Forwarded-Host (from proxy) over Host header
+              const host = req.get('x-forwarded-host') || req.get('host') || 'localhost:3000';
+              const protocol = req.get('x-forwarded-proto') || 'https';
+              
               const articleData = {
                 title: article.seoTitle || article.title,
                 description: article.seoDescription || article.excerpt || article.content.substring(0, 160),
                 image: article.imageUrl,
-                url: `https://${req.get('host')}/blog/${article.slug}`,
+                url: `${protocol}://${host}/blog/${article.slug}`,
                 keywords: article.seoKeywords || '',
               };
               console.log('[SSR] Article data:', { title: articleData.title, image: articleData.image });
-              template = injectBlogMetaTags(template, articleData);
               
-              // If this is a social media crawler, return preview HTML directly without React
+              // If this is a social media crawler, return minimal preview HTML without React
               if (isSocialMediaCrawler) {
-                console.log('[SSR] Returning preview HTML for social media crawler');
-                res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+                console.log('[SSR] Returning minimal preview HTML for social media crawler');
+                const minimalHtml = createMinimalPreviewHtml(articleData);
+                res.status(200).set({ 'Content-Type': 'text/html; charset=utf-8' }).end(minimalHtml);
                 return;
               }
+              
+              // For normal users, inject tags into full React app
+              template = injectBlogMetaTags(template, articleData);
             } else {
               console.log('[SSR] Article not found for slug:', slug);
             }
@@ -109,24 +171,5 @@ export async function setupVite(app: Express, server: Server) {
       vite.ssrFixStacktrace(e as Error);
       next(e);
     }
-  });
-}
-
-export function serveStatic(app: Express) {
-  const distPath =
-    process.env.NODE_ENV === "development"
-      ? path.resolve(import.meta.dirname, "../..", "dist", "public")
-      : path.resolve(import.meta.dirname, "public");
-  if (!fs.existsSync(distPath)) {
-    console.error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`
-    );
-  }
-
-  app.use(express.static(distPath));
-
-  // fall through to index.html if the file doesn't exist
-  app.use("*", (_req, res) => {
-    res.sendFile(path.resolve(distPath, "index.html"));
   });
 }

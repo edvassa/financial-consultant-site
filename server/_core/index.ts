@@ -7,7 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { registerChatRoutes } from "./chat";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
-import { serveStatic, setupVite } from "./vite";
+import { setupVite } from "./vite";
 import productsRouter from "../routes/products";
 import ordersRouter from "../routes/orders";
 import consultationsRouter from "../routes/consultations";
@@ -183,7 +183,11 @@ async function startServer() {
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
-    serveStatic(app);
+    // Production mode: serve static files from dist
+    app.use(express.static("dist"));
+    app.use("*", (req, res) => {
+      res.sendFile("dist/index.html");
+    });
   }
 
   const preferredPort = parseInt(process.env.PORT || "3000");
