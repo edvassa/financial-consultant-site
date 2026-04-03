@@ -49,6 +49,14 @@ export async function setupVite(app: Express, server: Server) {
       if (blogMatch) {
         const slug = blogMatch[1];
         console.log('[SSR] Processing blog article:', slug);
+        
+        // Detect social media crawlers
+        const userAgent = req.get('user-agent') || '';
+        const isSocialMediaCrawler = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegram|pinterest|slack|discord|opengraph|curl|wget/i.test(userAgent);
+        
+        console.log('[SSR] User-Agent:', userAgent);
+        console.log('[SSR] Is social media crawler:', isSocialMediaCrawler);
+        
         // Disable caching for blog pages so social media crawlers get fresh meta tags
         res.set({
           'Cache-Control': 'no-cache, no-store, must-revalidate, public, max-age=0',
@@ -74,6 +82,13 @@ export async function setupVite(app: Express, server: Server) {
                 keywords: article.seoKeywords || '',
               };
               template = injectBlogMetaTags(template, articleData);
+              
+              // If this is a social media crawler, return preview HTML directly without React
+              if (isSocialMediaCrawler) {
+                console.log('[SSR] Returning preview HTML for social media crawler');
+                res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+                return;
+              }
             }
           }
         } catch (error) {
