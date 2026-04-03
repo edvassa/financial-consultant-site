@@ -11,8 +11,9 @@ interface SocialShareProps {
 export default function SocialShare({ title, url, description }: SocialShareProps) {
   // Extract slug from URL for preview endpoint
   const slug = url.split('/blog/')[1]?.split('?')[0] || '';
-  // Use preview endpoint if available, otherwise use regular URL
-  const shareUrl = slug ? `${window.location.origin}/api/blog/preview/${slug}` : url;
+  // Use preview endpoint with absolute URL for social media crawlers
+  // This ensures social media platforms get the HTML with proper OG tags
+  const shareUrl = slug ? `https://${window.location.hostname}/api/blog/preview/${slug}` : url;
   
   const encodedUrl = encodeURIComponent(shareUrl);
   const encodedTitle = encodeURIComponent(title);

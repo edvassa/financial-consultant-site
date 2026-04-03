@@ -49,6 +49,12 @@ export async function setupVite(app: Express, server: Server) {
       if (blogMatch) {
         const slug = blogMatch[1];
         console.log('[SSR] Processing blog article:', slug);
+        // Disable caching for blog pages so social media crawlers get fresh meta tags
+        res.set({
+          'Cache-Control': 'no-cache, no-store, must-revalidate, public, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        });
         try {
           const db = await getDb();
           if (db) {

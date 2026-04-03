@@ -47,6 +47,58 @@
       gtag('js', new Date());
       gtag('config', 'G-X87FQDMDED');
     </script>
+    <!-- Dynamic Meta Tags Script -->
+    <script>
+      (function() {
+        // Get current URL and extract blog slug if present
+        const currentUrl = window.location.pathname;
+        const blogMatch = currentUrl.match(/\/blog\/([a-zA-Z0-9\-]+)/);
+        
+        if (blogMatch) {
+          const slug = blogMatch[1];
+          
+          // Fetch article data from preview endpoint
+          fetch(`/api/blog/preview/${slug}`)
+            .then(response => response.text())
+            .then(html => {
+              // Parse the HTML to extract meta tags
+              const parser = new DOMParser();
+              const doc = parser.parseFromString(html, 'text/html');
+              
+              // Copy all OG and Twitter meta tags from preview endpoint
+              const metaTags = doc.querySelectorAll('meta[property^="og:"], meta[name^="twitter:"], meta[name="description"], meta[name="keywords"]');
+              
+              metaTags.forEach(tag => {
+                const property = tag.getAttribute('property') || tag.getAttribute('name');
+                const content = tag.getAttribute('content');
+                
+                if (property && content) {
+                  // Find existing meta tag
+                  let existingTag = document.querySelector(`meta[property="${property}"], meta[name="${property}"]`);
+                  
+                  if (existingTag) {
+                    // Update existing tag
+                    existingTag.setAttribute('content', content);
+                  } else {
+                    // Create new tag
+                    const newTag = document.createElement('meta');
+                    if (property.startsWith('og:')) {
+                      newTag.setAttribute('property', property);
+                    } else {
+                      newTag.setAttribute('name', property);
+                    }
+                    newTag.setAttribute('content', content);
+                    document.head.appendChild(newTag);
+                  }
+                }
+              });
+              
+              console.log('[Meta Tags] Updated for blog article:', slug);
+            })
+            .catch(error => console.error('[Meta Tags] Error fetching preview:', error));
+        }
+      })();
+    </script>
   </head>
 
   <body>
