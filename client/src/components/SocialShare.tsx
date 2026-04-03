@@ -9,7 +9,12 @@ interface SocialShareProps {
 }
 
 export default function SocialShare({ title, url, description }: SocialShareProps) {
-  const encodedUrl = encodeURIComponent(url);
+  // Extract slug from URL for preview endpoint
+  const slug = url.split('/blog/')[1]?.split('?')[0] || '';
+  // Use preview endpoint if available, otherwise use regular URL
+  const shareUrl = slug ? `${window.location.origin}/api/blog/preview/${slug}` : url;
+  
+  const encodedUrl = encodeURIComponent(shareUrl);
   const encodedTitle = encodeURIComponent(title);
   const encodedDescription = encodeURIComponent(description || title);
 
@@ -26,7 +31,7 @@ export default function SocialShare({ title, url, description }: SocialShareProp
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(url);
+    navigator.clipboard.writeText(url); // Copy original URL, not preview
     toast.success("Ссылка скопирована в буфер обмена!");
   };
 
@@ -99,6 +104,9 @@ export default function SocialShare({ title, url, description }: SocialShareProp
         <span className="text-lg">🔗</span>
         <span className="hidden sm:inline">Копировать</span>
       </Button>
+      
+      {/* Hidden note for users */}
+      <span className="text-xs text-slate-500 ml-2">Социальные сети получат красивое превью с изображением и описанием</span>
     </div>
   );
 }

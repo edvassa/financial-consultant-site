@@ -4,6 +4,17 @@ import { blogArticles } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { storagePut } from "../storage";
 
+function escapeHtml(text: string): string {
+  const map: { [key: string]: string } = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, (char) => map[char]);
+}
+
 const router = Router();
 
 // Get all published blog articles
@@ -44,6 +55,73 @@ router.get("/article/:slug", async (req, res) => {
   } catch (error) {
     console.error("Error fetching article:", error);
     res.status(500).json({ error: "Failed to fetch article" });
+  }
+});
+
+// Get article preview with meta tags for social media
+router.get("/preview/:slug", async (req, res) => {
+  try {
+    const db = await getDb();
+    if (!db) {
+      return res.status(500).json({ error: "Database not available" });
+    }
+    const article = await db
+      .select()
+      .from(blogArticles)
+      .where(eq(blogArticles.slug, req.params.slug))
+      .limit(1);
+    
+    if (article.length === 0) {
+      return res.status(404).send('Article not found');
+    }
+
+    const data = article[0];
+    const title = data.seoTitle || data.title;
+    const description = data.seoDescription || data.excerpt || data.content.substring(0, 160);
+    const image = data.imageUrl || '';
+    const url = `https://${req.get('host')}/blog/${data.slug}`;
+    const keywords = data.seoKeywords || '';
+
+    // Return minimal HTML with OG tags for social media crawlers
+    const html = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${escapeHtml(title)}</title>
+  <meta name="description" content="${escapeHtml(description)}" />
+  ${keywords ? `<meta name="keywords" content="${escapeHtml(keywords)}" />` : ''}
+  
+  <!-- Open Graph Tags -->
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="${escapeHtml(title)}" />
+  <meta property="og:description" content="${escapeHtml(description)}" />
+  <meta property="og:url" content="${escapeHtml(url)}" />
+  <meta property="og:site_name" content="FinDirector" />
+  <meta property="og:locale" content="ru_RU" />
+  ${image ? `<meta property="og:image" content="${escapeHtml(image)}" />` : ''}
+  ${image ? `<meta property="og:image:width" content="1200" />` : ''}
+  ${image ? `<meta property="og:image:height" content="630" />` : ''}
+  
+  <!-- Twitter Card Tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${escapeHtml(title)}" />
+  <meta name="twitter:description" content="${escapeHtml(description)}" />
+  ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}" />` : ''}
+  
+  <!-- Redirect to actual article page -->
+  <script>window.location.href = '${escapeHtml(url)}';</script>
+</head>
+<body>
+  <p>Redirecting...</p>
+</body>
+</html>`;
+
+    res.set('Content-Type', 'text/html; charset=utf-8');
+    res.send(html);
+  } catch (error) {
+    console.error("Error fetching article preview:", error);
+    res.status(500).send('Error loading article');
   }
 });
 

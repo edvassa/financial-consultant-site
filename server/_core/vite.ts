@@ -5,6 +5,10 @@ import { nanoid } from "nanoid";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import viteConfig from "../../vite.config";
+import { injectBlogMetaTags } from "./blogSSR";
+import { getDb } from "../db";
+import { blogArticles } from "../../drizzle/schema";
+import { eq } from "drizzle-orm";
 
 export async function setupVite(app: Express, server: Server) {
   const serverOptions = {
@@ -23,6 +27,7 @@ export async function setupVite(app: Express, server: Server) {
   app.use(vite.middlewares);
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
+    console.log('[SSR] Processing URL:', url);
 
     try {
       const clientTemplate = path.resolve(
@@ -38,6 +43,39 @@ export async function setupVite(app: Express, server: Server) {
         `src="/src/main.tsx"`,
         `src="/src/main.tsx?v=${nanoid()}"`
       );
+
+      // Check if this is a blog article request and inject dynamic OG tags
+      const blogMatch = url.match(/^\/blog\/([a-zA-Z0-9\-]+)/);
+      if (blogMatch) {
+        const slug = blogMatch[1];
+        console.log('[SSR] Processing blog article:', slug);
+        try {
+          const db = await getDb();
+          if (db) {
+            const articles = await db
+              .select()
+              .from(blogArticles)
+              .where(eq(blogArticles.slug, slug))
+              .limit(1);
+            
+            if (articles.length > 0) {
+              const article = articles[0];
+              const articleData = {
+                title: article.seoTitle || article.title,
+                description: article.seoDescription || article.excerpt || article.content.substring(0, 160),
+                image: article.imageUrl,
+                url: `https://${req.get('host')}/blog/${article.slug}`,
+                keywords: article.seoKeywords || '',
+              };
+              template = injectBlogMetaTags(template, articleData);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching article for SSR:", error);
+          // Continue without article data - client-side will handle it
+        }
+      }
+
       const page = await vite.transformIndexHtml(url, template);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);
     } catch (e) {
