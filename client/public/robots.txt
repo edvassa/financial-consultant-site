@@ -4,18 +4,21 @@ Disallow: /admin
 Disallow: /dashboard
 Disallow: /api/
 Disallow: /*.json$
-Disallow: /?*
 
 # Specific rules for Google
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 0
 
 # Specific rules for Yandex
 User-agent: YandexBot
 Allow: /
+Crawl-delay: 1
+
+# Specific rules for Bing
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
 
 # Sitemap location
 Sitemap: https://finconsult-turcanelena.manus.space/sitemap.xml
-
-# Crawl delay
-Crawl-delay: 1
