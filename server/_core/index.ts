@@ -156,7 +156,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   ${article.imageUrl ? `<meta name="twitter:image" content="${escapeHtml(article.imageUrl)}" />` : ''}
   
   <!-- Facebook App ID for monetization -->
-  <meta property="fb:app_id" content="1234567890" />
+  <meta property="fb:app_id" content="1756111292309631" />
   
   <!-- Article Meta Tags -->
   <meta property="article:published_time" content="${article.createdAt?.toISOString() || new Date().toISOString()}" />

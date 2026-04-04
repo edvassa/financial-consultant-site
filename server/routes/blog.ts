@@ -38,7 +38,7 @@ async function generateBlogHtmlFile(article: any) {
   ${image ? `<meta property="og:image:height" content="630" />` : ''}
   
   <!-- Facebook App ID -->
-  <meta property="fb:app_id" content="1234567890" />
+  <meta property="fb:app_id" content="1756111292309631" />
   
   <!-- Canonical URL -->
   <link rel="canonical" href="${escapeHtml(url)}" />
@@ -187,7 +187,7 @@ router.get("/preview/:slug", async (req, res) => {
   ${image ? `<meta property="og:image:height" content="630" />` : ''}
   
   <!-- Facebook App ID -->
-  <meta property="fb:app_id" content="1234567890" />
+  <meta property="fb:app_id" content="1756111292309631" />
   
   <!-- Canonical URL -->
   <link rel="canonical" href="${escapeHtml(url)}" />
