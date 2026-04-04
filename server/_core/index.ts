@@ -242,9 +242,11 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
       await setupVite(app, server);
     } else {
       // Production: Serve static files from dist
+      // SSR middleware (line 90) handles /blog/* requests first
+      // Then static files are served for everything else
       app.use(express.static("dist"));
       
-      // Fallback to index.html for SPA
+      // Fallback to index.html for SPA - handles all other routes
       app.use("*", (req, res) => {
         res.set({
           'Cache-Control': 'no-cache, no-store, must-revalidate',

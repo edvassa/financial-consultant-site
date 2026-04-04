@@ -56,16 +56,14 @@ async function generateBlogHtmlFile(article: any) {
 </body>
 </html>`;
     
-    // Create blog directory if it doesn't exist
-    const blogDir = path.join(__dirname, '../../client/public/blog');
-    if (!fs.existsSync(blogDir)) {
-      fs.mkdirSync(blogDir, { recursive: true });
+    // Save to dist/blog/[slug]/index.html for production (SSG)
+    const distBlogDir = path.join(__dirname, '../../dist/blog', article.slug);
+    if (!fs.existsSync(distBlogDir)) {
+      fs.mkdirSync(distBlogDir, { recursive: true });
     }
-    
-    // Write HTML file
-    const filePath = path.join(blogDir, `${article.slug}.html`);
-    fs.writeFileSync(filePath, html);
-    console.log(`✅ Generated blog HTML: ${filePath}`);
+    const distFilePath = path.join(distBlogDir, 'index.html');
+    fs.writeFileSync(distFilePath, html);
+    console.log(`✅ Generated SSG HTML: ${distFilePath}`);
   } catch (error) {
     console.error('❌ Error generating blog HTML:', error);
   }
