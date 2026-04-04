@@ -191,6 +191,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
                   'Vary': 'User-Agent',
                   'X-Content-Type-Options': 'nosniff',
                   'X-Manus-No-Scraper-Param': 'true',
+                  'X-SSR-Rendered': 'true',
                   'Link': `<${canonicalUrl}>; rel="canonical"`
                 });
                 res.send(cleanHtml);
