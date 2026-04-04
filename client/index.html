@@ -70,30 +70,47 @@
               const parser = new DOMParser();
               const doc = parser.parseFromString(html, 'text/html');
               
-              // Copy all OG and Twitter meta tags from preview endpoint
-              const metaTags = doc.querySelectorAll('meta[property^="og:"], meta[name^="twitter:"], meta[name="description"], meta[name="keywords"]');
+              // Copy all OG, Twitter, and Facebook meta tags from preview endpoint
+              const metaTags = doc.querySelectorAll('meta[property^="og:"], meta[property="fb:app_id"], meta[name^="twitter:"], meta[name="description"], meta[name="keywords"], link[rel="canonical"]');
               
               metaTags.forEach(tag => {
-                const property = tag.getAttribute('property') || tag.getAttribute('name');
-                const content = tag.getAttribute('content');
-                
-                if (property && content) {
-                  // Find existing meta tag
-                  let existingTag = document.querySelector(`meta[property="${property}"], meta[name="${property}"]`);
-                  
-                  if (existingTag) {
-                    // Update existing tag
-                    existingTag.setAttribute('content', content);
-                  } else {
-                    // Create new tag
-                    const newTag = document.createElement('meta');
-                    if (property.startsWith('og:')) {
-                      newTag.setAttribute('property', property);
+                if (tag.tagName === 'LINK' && tag.getAttribute('rel') === 'canonical') {
+                  // Handle canonical link
+                  const href = tag.getAttribute('href');
+                  if (href) {
+                    let canonicalLink = document.querySelector('link[rel="canonical"]');
+                    if (canonicalLink) {
+                      canonicalLink.setAttribute('href', href);
                     } else {
-                      newTag.setAttribute('name', property);
+                      const newLink = document.createElement('link');
+                      newLink.setAttribute('rel', 'canonical');
+                      newLink.setAttribute('href', href);
+                      document.head.appendChild(newLink);
                     }
-                    newTag.setAttribute('content', content);
-                    document.head.appendChild(newTag);
+                  }
+                } else {
+                  // Handle meta tags
+                  const property = tag.getAttribute('property') || tag.getAttribute('name');
+                  const content = tag.getAttribute('content');
+                  
+                  if (property && content) {
+                    // Find existing meta tag
+                    let existingTag = document.querySelector(`meta[property="${property}"], meta[name="${property}"]`);
+                    
+                    if (existingTag) {
+                      // Update existing tag
+                      existingTag.setAttribute('content', content);
+                    } else {
+                      // Create new tag
+                      const newTag = document.createElement('meta');
+                      if (property.startsWith('og:') || property === 'fb:app_id') {
+                        newTag.setAttribute('property', property);
+                      } else {
+                        newTag.setAttribute('name', property);
+                      }
+                      newTag.setAttribute('content', content);
+                      document.head.appendChild(newTag);
+                    }
                   }
                 }
               });

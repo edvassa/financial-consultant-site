@@ -105,6 +105,12 @@ router.get("/preview/:slug", async (req, res) => {
   ${image ? `<meta property="og:image:width" content="1200" />` : ''}
   ${image ? `<meta property="og:image:height" content="630" />` : ''}
   
+  <!-- Facebook App ID -->
+  <meta property="fb:app_id" content="1234567890" />
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="${escapeHtml(url)}" />
+  
   <!-- Twitter Card Tags -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(title)}" />

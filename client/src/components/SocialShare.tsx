@@ -2,6 +2,13 @@ import { Facebook, Twitter, Linkedin, MessageCircle, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
+// Declare gtag for TypeScript
+declare global {
+  interface Window {
+    gtag?: (...args: any[]) => void;
+  }
+}
+
 interface SocialShareProps {
   title: string;
   url: string;
@@ -26,10 +33,30 @@ export default function SocialShare({ title, url, description }: SocialShareProp
   };
 
   const handleShare = (platform: keyof typeof shareLinks) => {
+    // Track share event in Google Analytics
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'share', {
+        'method': platform,
+        'content_type': 'blog_article',
+        'item_id': url,
+        'content_title': title
+      });
+    }
+    
     window.open(shareLinks[platform], "_blank", "width=600,height=400");
   };
 
   const handleCopyLink = () => {
+    // Track copy link event in Google Analytics
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'share', {
+        'method': 'copy_link',
+        'content_type': 'blog_article',
+        'item_id': url,
+        'content_title': title
+      });
+    }
+    
     navigator.clipboard.writeText(shareUrl);
     toast.success("Ссылка скопирована в буфер обмена!");
   };
@@ -44,6 +71,7 @@ export default function SocialShare({ title, url, description }: SocialShareProp
         onClick={() => handleShare("facebook")}
         className="gap-2 border-blue-200 text-blue-700 hover:bg-blue-50"
         title="Поделиться в Facebook"
+        data-ga-event="share_facebook"
       >
         <Facebook className="h-4 w-4" />
         <span className="hidden sm:inline">Facebook</span>
@@ -55,6 +83,7 @@ export default function SocialShare({ title, url, description }: SocialShareProp
         onClick={() => handleShare("twitter")}
         className="gap-2 border-sky-200 text-sky-700 hover:bg-sky-50"
         title="Поделиться в Twitter"
+        data-ga-event="share_twitter"
       >
         <Twitter className="h-4 w-4" />
         <span className="hidden sm:inline">Twitter</span>
@@ -66,6 +95,7 @@ export default function SocialShare({ title, url, description }: SocialShareProp
         onClick={() => handleShare("linkedin")}
         className="gap-2 border-blue-300 text-blue-800 hover:bg-blue-50"
         title="Поделиться в LinkedIn"
+        data-ga-event="share_linkedin"
       >
         <Linkedin className="h-4 w-4" />
         <span className="hidden sm:inline">LinkedIn</span>
@@ -77,6 +107,7 @@ export default function SocialShare({ title, url, description }: SocialShareProp
         onClick={() => handleShare("whatsapp")}
         className="gap-2 border-green-200 text-green-700 hover:bg-green-50"
         title="Поделиться в WhatsApp"
+        data-ga-event="share_whatsapp"
       >
         <MessageCircle className="h-4 w-4" />
         <span className="hidden sm:inline">WhatsApp</span>
@@ -88,6 +119,7 @@ export default function SocialShare({ title, url, description }: SocialShareProp
         onClick={() => handleShare("telegram")}
         className="gap-2 border-cyan-200 text-cyan-700 hover:bg-cyan-50"
         title="Поделиться в Telegram"
+        data-ga-event="share_telegram"
       >
         <Send className="h-4 w-4" />
         <span className="hidden sm:inline">Telegram</span>
@@ -99,6 +131,7 @@ export default function SocialShare({ title, url, description }: SocialShareProp
         onClick={handleCopyLink}
         className="gap-2 border-slate-300 text-slate-700 hover:bg-slate-100"
         title="Копировать ссылку"
+        data-ga-event="share_copy_link"
       >
         <span className="text-lg">🔗</span>
         <span className="hidden sm:inline">Копировать</span>
