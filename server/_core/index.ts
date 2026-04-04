@@ -94,9 +94,10 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
       
       console.log('[SSR] Request:', { path, url, userAgent: userAgent.substring(0, 50) });
       
-      // Check if this is a blog article request from a social media crawler
-      if (isSocialMediaCrawler(userAgent)) {
-        console.log('[SSR] Social media crawler detected:', userAgent.substring(0, 50));
+      // Check if this is a blog article request (serve SSR HTML for all requests to /blog/)
+      // This ensures social media crawlers always get correct meta tags regardless of user-agent
+      if (path.startsWith('/blog/')) {
+        console.log('[SSR] Blog request detected:', path);
         // Remove query parameters for clean og:url
         let cleanPath = path;
         if (url.includes('?')) {
