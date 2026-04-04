@@ -109,11 +109,10 @@ router.get("/preview/:slug", async (req, res) => {
   <meta name="twitter:description" content="${escapeHtml(description)}" />
   ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}" />` : ''}
   
-  <!-- Redirect to actual article page -->
-  <script>window.location.href = '${escapeHtml(url)}';</script>
 </head>
 <body>
-  <p>Redirecting...</p>
+  <h1>${escapeHtml(title)}</h1>
+  <p>${escapeHtml(description)}</p>
 </body>
 </html>`;
 

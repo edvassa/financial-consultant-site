@@ -133,11 +133,10 @@ async function startServer() {
   <meta name="twitter:description" content="${escapeHtml(description)}" />
   ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}" />` : ''}
   
-  <!-- Redirect to actual article page -->
-  <script>window.location.href = '${escapeHtml(articleUrl)}';</script>
 </head>
 <body>
-  <p>Redirecting...</p>
+  <h1>${escapeHtml(title)}</h1>
+  <p>${escapeHtml(description)}</p>
 </body>
 </html>`;
               
@@ -187,12 +186,14 @@ async function startServer() {
     app.use("*", async (req, res, next) => {
       const url = req.originalUrl;
       const userAgent = req.get('user-agent') || '';
-      console.log('[PRODUCTION SSR] URL:', url, 'UA:', userAgent.substring(0, 50));
+      const path = req.path;
+      console.log('[PRODUCTION SSR] URL:', url, 'PATH:', path, 'UA:', userAgent.substring(0, 50));
       
       // Check if this is a blog article request
-      const blogMatch = url.match(/^\/blog\/([^/?]+)/);
+      const blogMatch = path.match(/^\/blog\/([^/?]+)/);
       if (blogMatch) {
-        console.log('[PRODUCTION SSR] Blog match found, slug:', blogMatch[1]);
+        const isSocialBot = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegram|pinterest|slack|discord|viber|skype|opengraph|googlebot/i.test(userAgent);
+        console.log('[PRODUCTION SSR] Blog match found, slug:', blogMatch[1], 'isSocialBot:', isSocialBot);
         let slug = blogMatch[1];
         // Decode URL-encoded slug (e.g., theoryof%20games -> theoryof games)
         slug = decodeURIComponent(slug);
