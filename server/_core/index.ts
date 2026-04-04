@@ -79,29 +79,40 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
     app.use(async (req, res, next) => {
       const userAgent = req.get('user-agent') || '';
       const path = req.path;
+      const url = req.originalUrl;
+      
+      console.log('[SSR] Request:', { path, url, userAgent: userAgent.substring(0, 50) });
       
       // Check if this is a blog article request from a social media crawler
       if (isSocialMediaCrawler(userAgent)) {
+        console.log('[SSR] Social media crawler detected:', userAgent.substring(0, 50));
         const blogMatch = path.match(/^\/blog\/([^/?]+)/);
+        console.log('[SSR] Blog match:', blogMatch ? blogMatch[1] : 'no match');
         
         if (blogMatch) {
+          console.log('[SSR] Processing blog article:', blogMatch[1]);
           let slug = blogMatch[1];
           // Decode URL-encoded slug (e.g., theoryof%20games -> theoryof games)
           slug = decodeURIComponent(slug);
           
           try {
             const db = await getDb();
-            if (db) {
+            if (!db) {
+              console.log('[SSR] Database connection failed');
+            } else if (db) {
               const articles = await db
                 .select()
                 .from(blogArticles)
                 .where(eq(blogArticles.slug, slug))
                 .limit(1);
               
-              if (articles.length > 0) {
+              if (articles.length === 0) {
+                console.log('[SSR] Article not found in DB:', slug);
+              } else if (articles.length > 0) {
                 const article = articles[0];
                 const host = req.get('x-forwarded-host') || req.get('host') || 'localhost:3000';
                 const protocol = req.get('x-forwarded-proto') || 'https';
+                console.log('[SSR] Found article, returning SSR HTML for:', article.slug, 'host:', host);
                 
                 const minimalHtml = `<!DOCTYPE html>
 <html lang="ru">
@@ -132,11 +143,14 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   <meta name="twitter:description" content="${escapeHtml(article.seoDescription || article.excerpt || article.content.substring(0, 160))}" />
   ${article.imageUrl ? `<meta name="twitter:image" content="${escapeHtml(article.imageUrl)}" />` : ''}
   
+  <!-- Facebook App ID for monetization -->
+  <meta property="fb:app_id" content="1234567890" />
+  
   <!-- Article Meta Tags -->
   <meta property="article:published_time" content="${article.createdAt?.toISOString() || new Date().toISOString()}" />
   <meta property="article:author" content="Елена Цуркан" />
   
-  <!-- Canonical URL -->
+  <!-- Canonical URL - MUST be article URL, not homepage -->
   <link rel="canonical" href="${escapeHtml(`${protocol}://${host}/blog/${article.slug}`)}" />
 </head>
 <body>
@@ -148,19 +162,26 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
                 
                 res.set({
                   'Content-Type': 'text/html; charset=utf-8',
-                  'Cache-Control': 'no-cache, no-store, must-revalidate, public, max-age=0',
+                  'Cache-Control': 'public, max-age=3600',
                   'Pragma': 'no-cache',
                   'Expires': '0',
-                  'Vary': 'User-Agent'
+                  'Vary': 'User-Agent',
+                  'X-Content-Type-Options': 'nosniff'
                 });
+                console.log('[SSR] Sending SSR HTML for article:', article.slug, 'with image:', article.imageUrl);
                 res.status(200).end(minimalHtml);
                 return;
               }
             }
           } catch (error) {
-            console.error("[SSR] Error fetching article for social media crawler:", error);
+            console.error("[SSR] Error fetching article:", error);
+            // Continue to next middleware if there's an error
           }
+        } else {
+          console.log('[SSR] Not a blog URL, path:', path);
         }
+      } else {
+        console.log('[SSR] Not a social media crawler');
       }
       
       next();
