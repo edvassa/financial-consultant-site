@@ -9,11 +9,9 @@ interface SocialShareProps {
 }
 
 export default function SocialShare({ title, url, description }: SocialShareProps) {
-  // Extract slug from URL for preview endpoint
-  const slug = url.split('/blog/')[1]?.split('?')[0] || '';
-  // Use preview endpoint with absolute URL for social media crawlers
+  // Use the direct blog URL - SSR middleware handles social media crawlers
   // This ensures social media platforms get the HTML with proper OG tags
-  const shareUrl = slug ? `https://${window.location.hostname}/api/blog/preview/${slug}` : url;
+  const shareUrl = url;
   
   const encodedUrl = encodeURIComponent(shareUrl);
   const encodedTitle = encodeURIComponent(title);
@@ -32,7 +30,7 @@ export default function SocialShare({ title, url, description }: SocialShareProp
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(url); // Copy original URL, not preview
+    navigator.clipboard.writeText(shareUrl);
     toast.success("Ссылка скопирована в буфер обмена!");
   };
 

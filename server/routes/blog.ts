@@ -79,7 +79,9 @@ router.get("/preview/:slug", async (req, res) => {
     const title = data.seoTitle || data.title;
     const description = data.seoDescription || data.excerpt || data.content.substring(0, 160);
     const image = data.imageUrl || '';
-    const url = `https://${req.get('host')}/blog/${data.slug}`;
+    const host = req.get('x-forwarded-host') || req.get('host') || 'localhost:3000';
+    const protocol = req.get('x-forwarded-proto') || 'https';
+    const url = `${protocol}://${host}/blog/${data.slug}`;
     const keywords = data.seoKeywords || '';
 
     // Return minimal HTML with OG tags for social media crawlers
