@@ -97,7 +97,12 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
       // Check if this is a blog article request from a social media crawler
       if (isSocialMediaCrawler(userAgent)) {
         console.log('[SSR] Social media crawler detected:', userAgent.substring(0, 50));
-        const blogMatch = path.match(/^\/blog\/([^/?]+)/);
+        // Remove query parameters for clean og:url
+        let cleanPath = path;
+        if (url.includes('?')) {
+          cleanPath = path.split('?')[0];
+        }
+        const blogMatch = cleanPath.match(/^\/blog\/([^/?]+)/);
         console.log('[SSR] Blog match:', blogMatch ? blogMatch[1] : 'no match');
         
         if (blogMatch) {
@@ -105,6 +110,8 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
           let slug = blogMatch[1];
           // Decode URL-encoded slug (e.g., theoryof%20games -> theoryof games)
           slug = decodeURIComponent(slug);
+          // Ensure slug doesn't contain query parameters
+          slug = slug.split('?')[0];
           
           try {
             const db = await getDb();
