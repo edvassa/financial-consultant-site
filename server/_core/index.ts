@@ -62,32 +62,20 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
     // Configure body parser with larger size limit for file uploads
     app.use(express.json({ limit: "50mb" }));
     app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  // OAuth callback under /api/oauth/callback
-  registerOAuthRoutes(app);
-  // Chat API with streaming and tool calling
-  registerChatRoutes(app);
-  // Product management API
-  app.use("/api/products", productsRouter);
-  // Orders API
-  app.use("/api/orders", ordersRouter);
-  // Consultations API
-  app.use("/api/consultations", consultationsRouter);
-  // Blog API
-  app.use("/api/blog", blogRouter);
-  // Blog subscription API
-  app.use("/api/subscription", subscriptionRouter);
-  // File upload API
-  app.use("/api", fileUploadRouter);
-  // tRPC API
-  app.use(
-    "/api/trpc",
-    createExpressMiddleware({
-      router: appRouter,
-      createContext,
-    })
-  );
-  // SSR middleware for social media crawlers - MUST be BEFORE static file serving
-  async function setupSSRMiddleware(app: express.Express) {
+    
+    // Helper function to escape HTML
+    function escapeHtml(text: string): string {
+      const map: { [key: string]: string } = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.replace(/[&<>"']/g, (char) => map[char]);
+    }
+    
+    // SSR middleware for social media crawlers - MUST be FIRST
     app.use(async (req, res, next) => {
       const userAgent = req.get('user-agent') || '';
       const path = req.path;
@@ -177,51 +165,59 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
       
       next();
     });
-  }
-  
-  // development mode uses Vite, production mode uses static files
-  if (process.env.NODE_ENV === "development") {
-    await setupVite(app, server);
-  } else {
-    // Setup SSR middleware BEFORE static file serving
-    await setupSSRMiddleware(app);
     
-    // Serve static files from dist
-    app.use(express.static("dist"));
-    
-    // Fallback to index.html for SPA
-    app.use("*", (req, res) => {
-      res.set({
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
+    // OAuth callback under /api/oauth/callback
+    registerOAuthRoutes(app);
+    // Chat API with streaming and tool calling
+    registerChatRoutes(app);
+    // Product management API
+    app.use("/api/products", productsRouter);
+    // Orders API
+    app.use("/api/orders", ordersRouter);
+    // Consultations API
+    app.use("/api/consultations", consultationsRouter);
+  // Blog API
+    app.use("/api/blog", blogRouter);
+    // Blog subscription API
+    app.use("/api/subscription", subscriptionRouter);
+    // File upload API
+    app.use("/api", fileUploadRouter);
+    // tRPC API
+    app.use(
+      "/api/trpc",
+      createExpressMiddleware({
+        router: appRouter,
+        createContext,
+      })
+    );
+    // development mode uses Vite, production mode uses static files
+    if (process.env.NODE_ENV === "development") {
+      await setupVite(app, server);
+    } else {
+      // Serve static files from dist
+      app.use(express.static("dist"));
+      
+      // Fallback to index.html for SPA
+      app.use("*", (req, res) => {
+        res.set({
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        });
+        res.sendFile("dist/index.html");
       });
-      res.sendFile("dist/index.html");
+    }
+
+    const preferredPort = parseInt(process.env.PORT || "3000");
+    const port = await findAvailablePort(preferredPort);
+
+    if (port !== preferredPort) {
+      console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
+    }
+
+    server.listen(port, () => {
+      console.log(`Server running on http://localhost:${port}/`);
     });
   }
-
-  // Helper function to escape HTML
-  function escapeHtml(text: string): string {
-    const map: { [key: string]: string } = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#039;'
-    };
-    return text.replace(/[&<>"']/g, (char) => map[char]);
-  }
-
-  const preferredPort = parseInt(process.env.PORT || "3000");
-  const port = await findAvailablePort(preferredPort);
-
-  if (port !== preferredPort) {
-    console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
-  }
-
-  server.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}/`);
-  });
-}
 
 startServer().catch(console.error);
