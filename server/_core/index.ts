@@ -182,6 +182,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
                  // Remove manus_scraper parameter from HTML before sending
                 let cleanHtml = minimalHtml.replace(/\?manus_scraper=1/g, '');
                 
+                const canonicalUrl = `${protocol}://${host}/blog/${encodeURIComponent(article.slug)}`;
                 res.set({
                   'Content-Type': 'text/html; charset=utf-8',
                   'Cache-Control': 'public, max-age=3600',
@@ -189,7 +190,8 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
                   'Expires': '0',
                   'Vary': 'User-Agent',
                   'X-Content-Type-Options': 'nosniff',
-                  'X-Manus-No-Scraper-Param': 'true'
+                  'X-Manus-No-Scraper-Param': 'true',
+                  'Link': `<${canonicalUrl}>; rel="canonical"`
                 });
                 res.send(cleanHtml);
                 return;
