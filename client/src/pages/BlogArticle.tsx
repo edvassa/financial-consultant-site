@@ -195,7 +195,7 @@ export default function BlogArticle() {
         <div className="mt-8 p-6 bg-white rounded-lg border border-slate-200">
           <SocialShare
             title={article.title}
-            url={typeof window !== "undefined" ? window.location.href : ""}
+            url={`https://finconsult-turcanelena.manus.space/blog/${encodeURIComponent(article.slug)}`}
             description={article.excerpt || article.content.substring(0, 160)}
           />
         </div>

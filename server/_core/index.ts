@@ -148,7 +148,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   <meta property="og:type" content="article" />
   <meta property="og:title" content="${escapeHtml(article.seoTitle || article.title)}" />
   <meta property="og:description" content="${escapeHtml(article.seoDescription || article.excerpt || article.content.substring(0, 160))}" />
-  <meta property="og:url" content="${escapeHtml(`${protocol}://${host}/blog/${article.slug}`)}" />
+  <meta property="og:url" content="${escapeHtml(`${protocol}://${host}/blog/${encodeURIComponent(article.slug)}`)}" />
   <meta property="og:site_name" content="FinDirector" />
   <meta property="og:locale" content="ru_RU" />
   ${article.imageUrl ? `<meta property="og:image" content="${escapeHtml(article.imageUrl)}" />
