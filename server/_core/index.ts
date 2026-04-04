@@ -121,8 +121,9 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
                 console.log('[SSR] Article not found in DB:', slug);
               } else if (articles.length > 0) {
                 const article = articles[0];
-                const host = req.get('x-forwarded-host') || req.get('host') || 'localhost:3000';
-                const protocol = req.get('x-forwarded-proto') || 'https';
+                // Use hardcoded production domain for social media meta tags
+                const host = 'finconsult-turcanelena.manus.space';
+                const protocol = 'https';
                 console.log('[SSR] Found article, returning SSR HTML for:', article.slug, 'host:', host);
                 
                 const minimalHtml = `<!DOCTYPE html>
@@ -226,88 +227,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
     if (process.env.NODE_ENV === "development") {
       await setupVite(app, server);
     } else {
-      // Production: Add blog SSR route BEFORE static files
-      app.get('/blog/:slug', async (req, res) => {
-        const userAgent = req.get('user-agent') || '';
-        const isSocialCrawler = /facebookexternalhit|linkedinbot|twitterbot|whatsapp|telegrambot|slurp|bingbot|googlebot|baiduspider|yandexbot/i.test(userAgent);
-        
-        if (isSocialCrawler) {
-          try {
-            const { slug } = req.params;
-            const host = req.get('x-forwarded-host') || req.get('host') || 'finconsult-turcanelena.manus.space';
-            const protocol = req.get('x-forwarded-proto') || 'https';
-            const baseUrl = `${protocol}://${host}`;
-            
-            // Fetch article from database
-            const db = await getDb();
-            const article = await db.query.blogArticles.findFirst({
-              where: eq(blogArticles.slug, slug),
-            });
-            
-            if (!article) {
-              return res.status(404).sendFile('dist/index.html');
-            }
-            
-            const articleUrl = `${baseUrl}/blog/${slug}`;
-            const ogImage = article.imageUrl || `${baseUrl}/default-og-image.jpg`;
-            
-            const html = `<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${escapeHtml(article.title)}</title>
-  <meta name="description" content="${escapeHtml(article.description || article.title)}">
-  
-  <!-- Open Graph -->
-  <meta property="og:type" content="article">
-  <meta property="og:title" content="${escapeHtml(article.title)}">
-  <meta property="og:description" content="${escapeHtml(article.description || article.title)}">
-  <meta property="og:url" content="${articleUrl}">
-  <meta property="og:image" content="${ogImage}">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:image:type" content="image/jpeg">
-  <meta property="og:site_name" content="FinDirector">
-  <meta property="og:locale" content="ru_RU">
-  
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${escapeHtml(article.title)}">
-  <meta name="twitter:description" content="${escapeHtml(article.description || article.title)}">
-  <meta name="twitter:image" content="${ogImage}">
-  
-  <!-- Facebook App ID -->
-  <meta property="fb:app_id" content="1234567890">
-  
-  <!-- Canonical -->
-  <link rel="canonical" href="${articleUrl}">
-  
-  <!-- Redirect to React app after crawlers parse -->
-  <script>if (!/facebookexternalhit|linkedinbot|twitterbot|whatsapp|telegrambot|slurp|bingbot|googlebot|baiduspider|yandexbot/i.test(navigator.userAgent)) { window.location.href = '${articleUrl}'; }</script>
-</head>
-<body>
-  <p>Loading...</p>
-</body>
-</html>`;
-            
-            res.set({
-              'Content-Type': 'text/html; charset=utf-8',
-              'Cache-Control': 'public, max-age=3600',
-              'Vary': 'User-Agent'
-            });
-            res.send(html);
-          } catch (error) {
-            console.error('[Blog SSR] Error:', error);
-            res.status(500).sendFile('dist/index.html');
-          }
-        } else {
-          // Regular users get the React app
-          res.sendFile('dist/index.html');
-        }
-      });
-      
-      // Serve static files from dist
+      // Production: Serve static files from dist
       app.use(express.static("dist"));
       
       // Fallback to index.html for SPA
