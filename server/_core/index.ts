@@ -183,11 +183,120 @@ async function startServer() {
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
-    // Production mode: serve static files from dist
+    // Production mode: add SSR middleware for blog articles BEFORE static serving
+    app.use("*", async (req, res, next) => {
+      const url = req.originalUrl;
+      const userAgent = req.get('user-agent') || '';
+      
+      // Check if this is a blog article request
+      const blogMatch = url.match(/^\/blog\/([^/?]+)/);
+      if (blogMatch) {
+        let slug = blogMatch[1];
+        // Decode URL-encoded slug (e.g., theoryof%20games -> theoryof games)
+        slug = decodeURIComponent(slug);
+        
+        // Detect social media crawlers
+        const isSocialMediaCrawler = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegram|pinterest|slack|discord|opengraph|curl|wget/i.test(userAgent);
+        
+        if (isSocialMediaCrawler) {
+          try {
+            const db = await getDb();
+            if (db) {
+              const articles = await db
+                .select()
+                .from(blogArticles)
+                .where(eq(blogArticles.slug, slug))
+                .limit(1);
+              
+              if (articles.length > 0) {
+                const article = articles[0];
+                const host = req.get('x-forwarded-host') || req.get('host') || 'localhost:3000';
+                const protocol = req.get('x-forwarded-proto') || 'https';
+                
+                const minimalHtml = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${escapeHtml(article.seoTitle || article.title)}</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="${escapeHtml(article.seoDescription || article.excerpt || article.content.substring(0, 160))}" />
+  <meta name="keywords" content="${escapeHtml(article.seoKeywords || '')}" />
+  
+  <!-- Open Graph Tags -->
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="${escapeHtml(article.seoTitle || article.title)}" />
+  <meta property="og:description" content="${escapeHtml(article.seoDescription || article.excerpt || article.content.substring(0, 160))}" />
+  <meta property="og:url" content="${escapeHtml(`${protocol}://${host}/blog/${article.slug}`)}" />
+  <meta property="og:site_name" content="FinDirector" />
+  <meta property="og:locale" content="ru_RU" />
+  ${article.imageUrl ? `<meta property="og:image" content="${escapeHtml(article.imageUrl)}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/jpeg" />` : ''}
+  
+  <!-- Twitter Card Tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${escapeHtml(article.seoTitle || article.title)}" />
+  <meta name="twitter:description" content="${escapeHtml(article.seoDescription || article.excerpt || article.content.substring(0, 160))}" />
+  ${article.imageUrl ? `<meta name="twitter:image" content="${escapeHtml(article.imageUrl)}" />` : ''}
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="${escapeHtml(`${protocol}://${host}/blog/${article.slug}`)}" />
+</head>
+<body>
+  <p>Redirecting to article...</p>
+  <script>
+    window.location.href = '${escapeHtml(`${protocol}://${host}/blog/${article.slug}`)}';
+  </script>
+</body>
+</html>`;
+                
+                res.set({
+                  'Content-Type': 'text/html; charset=utf-8',
+                  'Cache-Control': 'no-cache, no-store, must-revalidate, public, max-age=0',
+                  'Pragma': 'no-cache',
+                  'Expires': '0',
+                  'Vary': 'User-Agent'
+                });
+                res.status(200).end(minimalHtml);
+                return;
+              }
+            }
+          } catch (error) {
+            console.error("Error fetching article for SSR in production:", error);
+          }
+        }
+      }
+      
+      next();
+    });
+    
+    // Serve static files from dist
     app.use(express.static("dist"));
+    
+    // Fallback to index.html for SPA
     app.use("*", (req, res) => {
+      res.set({
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      });
       res.sendFile("dist/index.html");
     });
+  }
+
+  // Helper function to escape HTML
+  function escapeHtml(text: string): string {
+    const map: { [key: string]: string } = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, (char) => map[char]);
   }
 
   const preferredPort = parseInt(process.env.PORT || "3000");
