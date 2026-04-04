@@ -463,6 +463,83 @@ router.post("/admin/regenerate-html", async (req: Request, res: Response) => {
   }
 });
 
+// Public: Get OG tags for social media sharing (minimal HTML, no React)
+router.get("/og/:slug", async (req, res) => {
+  try {
+    const db = await getDb();
+    if (!db) {
+      return res.status(500).send('<html><head><title>Error</title></head><body>Database error</body></html>');
+    }
+    
+    const slug = req.params.slug;
+    const article = await db
+      .select()
+      .from(blogArticles)
+      .where(eq(blogArticles.slug, slug))
+      .limit(1);
+
+    if (article.length === 0) {
+      return res.status(404).send('<html><head><title>Not Found</title></head><body>Article not found</body></html>');
+    }
+
+    const data = article[0];
+    const title = data.seoTitle || data.title;
+    const description = data.seoDescription || data.excerpt || data.content.substring(0, 160);
+    const image = data.imageUrl || '';
+    const domain = process.env.VITE_APP_DOMAIN || 'finconsult-turcanelena.manus.space';
+    const url = `https://${domain}/blog/${slug}`;
+
+    // Minimal HTML with OG tags - NO React, NO JavaScript, NO div#root
+    const html = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${escapeHtml(title)}</title>
+  <meta name="description" content="${escapeHtml(description)}" />
+  
+  <!-- Open Graph Tags -->
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="${escapeHtml(title)}" />
+  <meta property="og:description" content="${escapeHtml(description)}" />
+  <meta property="og:url" content="${escapeHtml(url)}" />
+  <meta property="og:site_name" content="FinDirector" />
+  <meta property="og:locale" content="ru_RU" />
+  ${image ? `<meta property="og:image" content="${escapeHtml(image)}" />` : ''}
+  ${image ? `<meta property="og:image:width" content="1200" />` : ''}
+  ${image ? `<meta property="og:image:height" content="630" />` : ''}
+  
+  <!-- Facebook App ID -->
+  <meta property="fb:app_id" content="1756111292309631" />
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="${escapeHtml(url)}" />
+  
+  <!-- Redirect to blog article -->
+  <meta http-equiv="refresh" content="0;url=/blog/${encodeURIComponent(slug)}" />
+  
+  <!-- Twitter Card Tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${escapeHtml(title)}" />
+  <meta name="twitter:description" content="${escapeHtml(description)}" />
+  ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}" />` : ''}
+</head>
+<body>
+</body>
+</html>`;
+
+    res.set({
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'public, max-age=3600',
+      'Link': `<${url}>; rel="canonical"`
+    });
+    res.send(html);
+  } catch (error) {
+    console.error("Error fetching OG tags:", error);
+    res.status(500).send('<html><head><title>Error</title></head><body>Server error</body></html>');
+  }
+});
+
 // Admin: Upload image for paste in content
 router.post("/upload-image", async (req: Request, res: Response) => {
   try {
