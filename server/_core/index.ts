@@ -188,7 +188,8 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
                   'Pragma': 'no-cache',
                   'Expires': '0',
                   'Vary': 'User-Agent',
-                  'X-Content-Type-Options': 'nosniff'
+                  'X-Content-Type-Options': 'nosniff',
+                  'X-Manus-No-Scraper-Param': 'true'
                 });
                 res.send(cleanHtml);
                 return;
