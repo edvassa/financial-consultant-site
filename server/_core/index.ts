@@ -242,14 +242,20 @@ async function startServer() {
   <meta name="twitter:description" content="${escapeHtml(article.seoDescription || article.excerpt || article.content.substring(0, 160))}" />
   ${article.imageUrl ? `<meta name="twitter:image" content="${escapeHtml(article.imageUrl)}" />` : ''}
   
+  <!-- Facebook Monetization -->
+  <meta property="fb:app_id" content="${process.env.FACEBOOK_APP_ID || ''}" />
+  
+  <!-- Article Meta Tags -->
+  <meta property="article:published_time" content="${article.createdAt?.toISOString() || new Date().toISOString()}" />
+  <meta property="article:author" content="Елена Цуркан" />
+  
   <!-- Canonical URL -->
   <link rel="canonical" href="${escapeHtml(`${protocol}://${host}/blog/${article.slug}`)}" />
 </head>
 <body>
-  <p>Redirecting to article...</p>
-  <script>
-    window.location.href = '${escapeHtml(`${protocol}://${host}/blog/${article.slug}`)}';
-  </script>
+  <!-- Minimal content for crawlers -->
+  <h1>${escapeHtml(article.seoTitle || article.title)}</h1>
+  <p>${escapeHtml(article.seoDescription || article.excerpt || article.content.substring(0, 160))}</p>
 </body>
 </html>`;
                 
