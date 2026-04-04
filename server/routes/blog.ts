@@ -17,6 +17,10 @@ async function generateBlogHtmlFile(article: any) {
     const image = article.imageUrl || '';
     const domain = process.env.VITE_APP_DOMAIN || 'finconsult-turcanelena.manus.space';
     const url = `https://${domain}/blog/${article.slug}`;
+    const ogImage = image ? `<meta property="og:image" content="${escapeHtml(image)}" />` : '';
+    const ogImageWidth = image ? `<meta property="og:image:width" content="1200" />` : '';
+    const ogImageHeight = image ? `<meta property="og:image:height" content="630" />` : '';
+    const twitterImage = image ? `<meta name="twitter:image" content="${escapeHtml(image)}" />` : '';
     
     const html = `<!DOCTYPE html>
 <html lang="ru">
@@ -33,9 +37,9 @@ async function generateBlogHtmlFile(article: any) {
   <meta property="og:url" content="${escapeHtml(url)}" />
   <meta property="og:site_name" content="FinDirector" />
   <meta property="og:locale" content="ru_RU" />
-  ${image ? `<meta property="og:image" content="${escapeHtml(image)}" />` : ''}
-  ${image ? `<meta property="og:image:width" content="1200" />` : ''}
-  ${image ? `<meta property="og:image:height" content="630" />` : ''}
+  ${ogImage}
+  ${ogImageWidth}
+  ${ogImageHeight}
   
   <!-- Facebook App ID -->
   <meta property="fb:app_id" content="1756111292309631" />
@@ -50,7 +54,7 @@ async function generateBlogHtmlFile(article: any) {
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(title)}" />
   <meta name="twitter:description" content="${escapeHtml(description)}" />
-  ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}" />` : ''}
+  ${twitterImage}
   
 </head>
 <body>
@@ -157,6 +161,10 @@ router.get("/preview/:slug", async (req, res) => {
     const title = data.seoTitle || data.title;
     const description = data.seoDescription || data.excerpt || data.content.substring(0, 160);
     const image = data.imageUrl || '';
+    const ogImage = image ? `<meta property="og:image" content="${escapeHtml(image)}" />` : '';
+    const ogImageWidth = image ? `<meta property="og:image:width" content="1200" />` : '';
+    const ogImageHeight = image ? `<meta property="og:image:height" content="630" />` : '';
+    const twitterImage = image ? `<meta name="twitter:image" content="${escapeHtml(image)}" />` : '';
     
     // Debug: log all headers
     console.log('[Preview] Headers:', {
@@ -193,9 +201,9 @@ router.get("/preview/:slug", async (req, res) => {
   <meta property="og:url" content="${escapeHtml(url)}" />
   <meta property="og:site_name" content="FinDirector" />
   <meta property="og:locale" content="ru_RU" />
-  ${image ? `<meta property="og:image" content="${escapeHtml(image)}" />` : ''}
-  ${image ? `<meta property="og:image:width" content="1200" />` : ''}
-  ${image ? `<meta property="og:image:height" content="630" />` : ''}
+  ${ogImage}
+  ${ogImageWidth}
+  ${ogImageHeight}
   
   <!-- Facebook App ID -->
   <meta property="fb:app_id" content="1756111292309631" />
@@ -210,7 +218,7 @@ router.get("/preview/:slug", async (req, res) => {
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(title)}" />
   <meta name="twitter:description" content="${escapeHtml(description)}" />
-  ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}" />` : ''}
+  ${twitterImage}
   
 </head>
 <body>
@@ -486,10 +494,17 @@ router.get("/og/:slug", async (req, res) => {
     const title = data.seoTitle || data.title;
     const description = data.seoDescription || data.excerpt || data.content.substring(0, 160);
     const image = data.imageUrl || '';
-    const domain = process.env.VITE_APP_DOMAIN || 'finconsult-turcanelena.manus.space';
-    const url = `https://${domain}/blog/${slug}`;
+    // HARDCODED SITE_URL - never use req.url or req.originalUrl
+    const SITE_URL = "https://finconsult-turcanelena.manus.space";
+    const url = `${SITE_URL}/blog/${slug}`;
 
     // Minimal HTML with OG tags - NO React, NO JavaScript, NO div#root
+    // IMPORTANT: og:url MUST use hardcoded SITE_URL, never req.url or req.originalUrl
+    const ogImage = image ? `<meta property="og:image" content="${escapeHtml(image)}" />` : '';
+    const ogImageWidth = image ? `<meta property="og:image:width" content="1200" />` : '';
+    const ogImageHeight = image ? `<meta property="og:image:height" content="630" />` : '';
+    const twitterImage = image ? `<meta name="twitter:image" content="${escapeHtml(image)}" />` : '';
+    
     const html = `<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -502,12 +517,12 @@ router.get("/og/:slug", async (req, res) => {
   <meta property="og:type" content="article" />
   <meta property="og:title" content="${escapeHtml(title)}" />
   <meta property="og:description" content="${escapeHtml(description)}" />
-  <meta property="og:url" content="${escapeHtml(url)}" />
+  <meta property="og:url" content="${SITE_URL}/blog/${slug}" />
   <meta property="og:site_name" content="FinDirector" />
   <meta property="og:locale" content="ru_RU" />
-  ${image ? `<meta property="og:image" content="${escapeHtml(image)}" />` : ''}
-  ${image ? `<meta property="og:image:width" content="1200" />` : ''}
-  ${image ? `<meta property="og:image:height" content="630" />` : ''}
+  ${ogImage}
+  ${ogImageWidth}
+  ${ogImageHeight}
   
   <!-- Facebook App ID -->
   <meta property="fb:app_id" content="1756111292309631" />
@@ -522,7 +537,7 @@ router.get("/og/:slug", async (req, res) => {
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(title)}" />
   <meta name="twitter:description" content="${escapeHtml(description)}" />
-  ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}" />` : ''}
+  ${twitterImage}
 </head>
 <body>
 </body>
@@ -531,7 +546,8 @@ router.get("/og/:slug", async (req, res) => {
     res.set({
       'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'public, max-age=3600',
-      'Link': `<${url}>; rel="canonical"`
+      'Link': `<${url}>; rel="canonical"`,
+      'X-Canonical-URL': url
     });
     res.send(html);
   } catch (error) {
