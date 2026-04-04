@@ -43,6 +43,9 @@ async function generateBlogHtmlFile(article: any) {
   <!-- Canonical URL -->
   <link rel="canonical" href="${escapeHtml(url)}" />
   
+  <!-- Redirect to blog article after crawlers read OG tags -->
+  <meta http-equiv="refresh" content="0;url=/blog/${encodeURIComponent(article.slug)}" />
+  
   <!-- Twitter Card Tags -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(title)}" />
@@ -64,6 +67,16 @@ async function generateBlogHtmlFile(article: any) {
     const distFilePath = path.join(distBlogDir, 'index.html');
     fs.writeFileSync(distFilePath, html);
     console.log(`✅ Generated SSG HTML: ${distFilePath}`);
+    
+    // Also create /share/[slug]/index.html with OG tags and redirect
+    // This bypasses Manus proxy which intercepts /blog/* paths
+    const shareDir = path.join(__dirname, '../../dist/share', article.slug);
+    if (!fs.existsSync(shareDir)) {
+      fs.mkdirSync(shareDir, { recursive: true });
+    }
+    const shareFilePath = path.join(shareDir, 'index.html');
+    fs.writeFileSync(shareFilePath, html);
+    console.log(`✅ Generated share page: ${shareFilePath}`);
   } catch (error) {
     console.error('❌ Error generating blog HTML:', error);
   }
@@ -189,6 +202,9 @@ router.get("/preview/:slug", async (req, res) => {
   
   <!-- Canonical URL -->
   <link rel="canonical" href="${escapeHtml(url)}" />
+  
+  <!-- Redirect to blog article after crawlers read OG tags -->
+  <meta http-equiv="refresh" content="0;url=/blog/${encodeURIComponent(data.slug)}" />
   
   <!-- Twitter Card Tags -->
   <meta name="twitter:card" content="summary_large_image" />

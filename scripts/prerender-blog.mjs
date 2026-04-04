@@ -48,6 +48,9 @@ async function generateBlogHtml(article, domain) {
   <!-- Canonical URL -->
   <link rel="canonical" href="${escapeHtml(url)}" />
   
+  <!-- Redirect to blog article after crawlers read OG tags -->
+  <meta http-equiv="refresh" content="0;url=/blog/${encodeURIComponent(article.slug)}" />
+  
   <!-- Twitter Card Tags -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(title)}" />
@@ -106,7 +109,16 @@ async function prerender() {
         
         const filePath = path.join(distBlogDir, 'index.html');
         fs.writeFileSync(filePath, html);
-        console.log(`✅ Prerendered: ${article.slug}`);
+        
+        // Also create /share/[slug]/index.html (bypasses Manus proxy)
+        const shareDir = path.join(__dirname, '../dist/share', article.slug);
+        if (!fs.existsSync(shareDir)) {
+          fs.mkdirSync(shareDir, { recursive: true });
+        }
+        
+        const shareFilePath = path.join(shareDir, 'index.html');
+        fs.writeFileSync(shareFilePath, html);
+        console.log(`✅ Prerendered: ${article.slug} (blog + share)`);
         successCount++;
       } catch (error) {
         console.error(`❌ Error prerendering ${article.slug}:`, error.message);
