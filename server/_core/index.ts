@@ -37,123 +37,31 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 
-// SSR middleware for social media crawlers
-function isSocialMediaCrawler(userAgent: string): boolean {
-  const crawlers = [
-    'facebookexternalhit',
-    'twitterbot',
-    'linkedinbot',
-    'whatsapp',
-    'telegram',
-    'pinterest',
-    'slack',
-    'discord',
-    'viber',
-    'skype',
-    'opengraph',
-    'googlebot',
-  ];
-  return crawlers.some(crawler => userAgent.toLowerCase().includes(crawler));
-}
+  // SSR middleware for social media crawlers
+  function isSocialMediaCrawler(userAgent: string): boolean {
+    const crawlers = [
+      'facebookexternalhit',
+      'twitterbot',
+      'linkedinbot',
+      'whatsapp',
+      'telegram',
+      'pinterest',
+      'slack',
+      'discord',
+      'viber',
+      'skype',
+      'opengraph',
+      'googlebot',
+    ];
+    return crawlers.some(crawler => userAgent.toLowerCase().includes(crawler));
+  }
 
-async function startServer() {
-  const app = express();
-  const server = createServer(app);
-  // Configure body parser with larger size limit for file uploads
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  
-  // SSR middleware for blog articles when accessed by social media crawlers
-  app.use(async (req, res, next) => {
-    const userAgent = req.get('user-agent') || '';
-    const url = req.originalUrl;
-    
-    // Check if this is a blog article request from a social media crawler
-    if (isSocialMediaCrawler(userAgent)) {
-      const blogMatch = url.match(/^\/blog\/([a-zA-Z0-9\-]+)/);
-      
-      if (blogMatch) {
-        const slug = blogMatch[1];
-        
-        try {
-          const db = await getDb();
-          if (db) {
-            const articles = await db
-              .select()
-              .from(blogArticles)
-              .where(eq(blogArticles.slug, slug))
-              .limit(1);
-            
-            if (articles.length > 0) {
-              const article = articles[0];
-              const title = article.seoTitle || article.title;
-              const description = article.seoDescription || article.excerpt || article.content.substring(0, 160);
-              const image = article.imageUrl || '';
-              const articleUrl = `https://${req.get('host')}/blog/${article.slug}`;
-              const keywords = article.seoKeywords || '';
-              
-              // Helper to escape HTML
-              const escapeHtml = (text: string): string => {
-                const map: { [key: string]: string } = {
-                  '&': '&amp;',
-                  '<': '&lt;',
-                  '>': '&gt;',
-                  '"': '&quot;',
-                  "'": '&#039;'
-                };
-                return text.replace(/[&<>"']/g, (char) => map[char]);
-              };
-              
-              // Return HTML with OG tags for social media crawlers
-              const html = `<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${escapeHtml(title)}</title>
-  <meta name="description" content="${escapeHtml(description)}" />
-  ${keywords ? `<meta name="keywords" content="${escapeHtml(keywords)}" />` : ''}
-  
-  <!-- Open Graph Tags -->
-  <meta property="og:type" content="article" />
-  <meta property="og:title" content="${escapeHtml(title)}" />
-  <meta property="og:description" content="${escapeHtml(description)}" />
-  <meta property="og:url" content="${escapeHtml(articleUrl)}" />
-  <meta property="og:site_name" content="FinDirector" />
-  <meta property="og:locale" content="ru_RU" />
-  ${image ? `<meta property="og:image" content="${escapeHtml(image)}" />` : ''}
-  ${image ? `<meta property="og:image:width" content="1200" />` : ''}
-  ${image ? `<meta property="og:image:height" content="630" />` : ''}
-  <meta property="article:published_time" content="${new Date(article.createdAt || Date.now()).toISOString()}" />
-  <meta property="article:author" content="Елена Цуркан" />
-  
-  <!-- Twitter Card Tags -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="${escapeHtml(title)}" />
-  <meta name="twitter:description" content="${escapeHtml(description)}" />
-  ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}" />` : ''}
-  
-</head>
-<body>
-  <h1>${escapeHtml(title)}</h1>
-  <p>${escapeHtml(description)}</p>
-</body>
-</html>`;
-              
-              res.set('Content-Type', 'text/html; charset=utf-8');
-              res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-              return res.send(html);
-            }
-          }
-        } catch (error) {
-          console.error("[SSR] Error fetching article for social media crawler:", error);
-          // Continue to next middleware if error
-        }
-      }
-    }
-    
-    next();
-  });
+  async function startServer() {
+    const app = express();
+    const server = createServer(app);
+    // Configure body parser with larger size limit for file uploads
+    app.use(express.json({ limit: "50mb" }));
+    app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
   // Chat API with streaming and tool calling
@@ -178,30 +86,21 @@ async function startServer() {
       createContext,
     })
   );
-  // development mode uses Vite, production mode uses static files
-  if (process.env.NODE_ENV === "development") {
-    await setupVite(app, server);
-  } else {
-    // Production mode: add SSR middleware for blog articles BEFORE static serving
-    app.use("*", async (req, res, next) => {
-      const url = req.originalUrl;
+  // SSR middleware for social media crawlers - MUST be BEFORE static file serving
+  async function setupSSRMiddleware(app: express.Express) {
+    app.use(async (req, res, next) => {
       const userAgent = req.get('user-agent') || '';
       const path = req.path;
-      console.log('[PRODUCTION SSR] URL:', url, 'PATH:', path, 'UA:', userAgent.substring(0, 50));
       
-      // Check if this is a blog article request
-      const blogMatch = path.match(/^\/blog\/([^/?]+)/);
-      if (blogMatch) {
-        const isSocialBot = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegram|pinterest|slack|discord|viber|skype|opengraph|googlebot/i.test(userAgent);
-        console.log('[PRODUCTION SSR] Blog match found, slug:', blogMatch[1], 'isSocialBot:', isSocialBot);
-        let slug = blogMatch[1];
-        // Decode URL-encoded slug (e.g., theoryof%20games -> theoryof games)
-        slug = decodeURIComponent(slug);
+      // Check if this is a blog article request from a social media crawler
+      if (isSocialMediaCrawler(userAgent)) {
+        const blogMatch = path.match(/^\/blog\/([^/?]+)/);
         
-        // Detect social media crawlers
-        const isSocialMediaCrawler = /facebookexternalhit|twitterbot|linkedinbot|whatsapp|telegram|pinterest|slack|discord|opengraph|curl|wget/i.test(userAgent);
-        
-        if (isSocialMediaCrawler) {
+        if (blogMatch) {
+          let slug = blogMatch[1];
+          // Decode URL-encoded slug (e.g., theoryof%20games -> theoryof games)
+          slug = decodeURIComponent(slug);
+          
           try {
             const db = await getDb();
             if (db) {
@@ -245,9 +144,6 @@ async function startServer() {
   <meta name="twitter:description" content="${escapeHtml(article.seoDescription || article.excerpt || article.content.substring(0, 160))}" />
   ${article.imageUrl ? `<meta name="twitter:image" content="${escapeHtml(article.imageUrl)}" />` : ''}
   
-  <!-- Facebook Monetization -->
-  <meta property="fb:app_id" content="${process.env.FACEBOOK_APP_ID || ''}" />
-  
   <!-- Article Meta Tags -->
   <meta property="article:published_time" content="${article.createdAt?.toISOString() || new Date().toISOString()}" />
   <meta property="article:author" content="Елена Цуркан" />
@@ -274,13 +170,21 @@ async function startServer() {
               }
             }
           } catch (error) {
-            console.error("Error fetching article for SSR in production:", error);
+            console.error("[SSR] Error fetching article for social media crawler:", error);
           }
         }
       }
       
       next();
     });
+  }
+  
+  // development mode uses Vite, production mode uses static files
+  if (process.env.NODE_ENV === "development") {
+    await setupVite(app, server);
+  } else {
+    // Setup SSR middleware BEFORE static file serving
+    await setupSSRMiddleware(app);
     
     // Serve static files from dist
     app.use(express.static("dist"));
