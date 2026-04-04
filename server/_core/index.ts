@@ -172,6 +172,9 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 </body>
 </html>`;
                 
+                 // Remove manus_scraper parameter from HTML before sending
+                let cleanHtml = minimalHtml.replace(/\?manus_scraper=1/g, '');
+                
                 res.set({
                   'Content-Type': 'text/html; charset=utf-8',
                   'Cache-Control': 'public, max-age=3600',
@@ -180,8 +183,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
                   'Vary': 'User-Agent',
                   'X-Content-Type-Options': 'nosniff'
                 });
-                console.log('[SSR] Sending SSR HTML for article:', article.slug, 'with image:', article.imageUrl);
-                res.status(200).end(minimalHtml);
+                res.send(cleanHtml);
                 return;
               }
             }
