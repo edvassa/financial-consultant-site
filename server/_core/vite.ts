@@ -44,11 +44,9 @@ function createMinimalPreviewHtml(articleData: any): string {
   <link rel="canonical" href="${escapeHtml(articleData.url)}" />
 </head>
 <body>
-  <p>Redirecting to article...</p>
-  <script>
-    // Redirect to actual article page after crawlers have read the meta tags
-    window.location.href = '${escapeHtml(articleData.url)}';
-  </script>
+  <!-- Minimal content for crawlers -->
+  <h1>${escapeHtml(articleData.title)}</h1>
+  <p>${escapeHtml(articleData.description)}</p>
 </body>
 </html>`;
 }

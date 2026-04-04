@@ -187,10 +187,12 @@ async function startServer() {
     app.use("*", async (req, res, next) => {
       const url = req.originalUrl;
       const userAgent = req.get('user-agent') || '';
+      console.log('[PRODUCTION SSR] URL:', url, 'UA:', userAgent.substring(0, 50));
       
       // Check if this is a blog article request
       const blogMatch = url.match(/^\/blog\/([^/?]+)/);
       if (blogMatch) {
+        console.log('[PRODUCTION SSR] Blog match found, slug:', blogMatch[1]);
         let slug = blogMatch[1];
         // Decode URL-encoded slug (e.g., theoryof%20games -> theoryof games)
         slug = decodeURIComponent(slug);
