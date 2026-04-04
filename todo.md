@@ -147,3 +147,9 @@
 - [x] Update Home.tsx to load content from database
 - [x] Verify content changes persist across sessions
 - [ ] Test "Learn More" PDF viewer functionality
+
+## Phase 16: Social Media Preview Fix
+- [x] Remove JavaScript redirect from generated blog HTML files
+- [x] Regenerate all blog HTML files without redirect
+- [x] Verify OG tags are readable by social media crawlers
+- [x] Add endpoint to regenerate HTML files when needed

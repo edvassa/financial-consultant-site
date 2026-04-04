@@ -49,13 +49,10 @@ async function generateBlogHtmlFile(article: any) {
   <meta name="twitter:description" content="${escapeHtml(description)}" />
   ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}" />` : ''}
   
-  <!-- Redirect to main app -->
-  <script>
-    window.location.href = '${escapeHtml(url)}';
-  </script>
 </head>
 <body>
-  <p>Redirecting to article...</p>
+  <h1>${escapeHtml(title)}</h1>
+  <p>${escapeHtml(description)}</p>
 </body>
 </html>`;
     
@@ -426,6 +423,29 @@ router.get("/admin/:id", async (req, res) => {
   } catch (error) {
     console.error("Error fetching article:", error);
     res.status(500).json({ error: "Failed to fetch article" });
+  }
+});
+
+// Admin: Regenerate all blog HTML files
+router.post("/admin/regenerate-html", async (req: Request, res: Response) => {
+  try {
+    const db = await getDb();
+    if (!db) {
+      return res.status(500).json({ error: "Database not available" });
+    }
+    
+    const allArticles = await db.select().from(blogArticles);
+    let count = 0;
+    
+    for (const article of allArticles) {
+      await generateBlogHtmlFile(article);
+      count++;
+    }
+    
+    res.json({ success: true, message: `Regenerated ${count} HTML files` });
+  } catch (error) {
+    console.error("Error regenerating HTML files:", error);
+    res.status(500).json({ error: "Failed to regenerate HTML files" });
   }
 });
 
