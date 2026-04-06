@@ -2,13 +2,14 @@ import express, { type Express } from "express";
 import fs from "fs";
 import { type Server } from "http";
 import { nanoid } from "nanoid";
-import path from "path";
+import pathModule from "path";
 import { createServer as createViteServer } from "vite";
 import viteConfig from "../../vite.config";
 import { injectBlogMetaTags } from "./blogSSR";
 import { getDb } from "../db";
 import { blogArticles } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
+import { SITE_URL } from "../../config.js";
 
 function createMinimalPreviewHtml(articleData: any): string {
   return `<!DOCTYPE html>
@@ -78,13 +79,12 @@ export async function setupVite(app: Express, server: Server) {
 
   app.use(vite.middlewares);
   app.use("*", async (req, res, next) => {
-    const url = req.originalUrl;
+    const urlPath = req.path; // Use path only, not originalUrl (which has ?manus_scraper=1)
     const userAgent = req.get('user-agent') || '';
-    const host = req.get('host') || '';
-    console.log('[SSR] Processing URL:', url, '| Host:', host, '| UA:', userAgent.substring(0, 50));
+    console.log('[SSR] Processing path:', urlPath, '| UA:', userAgent.substring(0, 50));
 
     try {
-      const clientTemplate = path.resolve(
+      const clientTemplate = pathModule.resolve(
         import.meta.dirname,
         "../..",
         "client",
@@ -100,7 +100,7 @@ export async function setupVite(app: Express, server: Server) {
 
       // Check if this is a blog article request and inject dynamic OG tags
       // Match any slug including spaces and special characters (URL-encoded)
-      const blogMatch = url.match(/^\/blog\/([^/?]+)/);
+      const blogMatch = urlPath.match(/^\/blog\/([^/?]+)/);
       if (blogMatch) {
         let slug = blogMatch[1];
         // Decode URL-encoded slug (e.g., theoryof%20games -> theoryof games)
@@ -134,11 +134,13 @@ export async function setupVite(app: Express, server: Server) {
               const host = req.get('x-forwarded-host') || req.get('host') || 'localhost:3000';
               const protocol = req.get('x-forwarded-proto') || 'https';
               
+              // Use hardcoded SITE_URL from config - never use req.get('host')
+              // because Manus proxy modifies these headers to add ?manus_scraper=1
               const articleData = {
                 title: article.seoTitle || article.title,
                 description: article.seoDescription || article.excerpt || article.content.substring(0, 160),
                 image: article.imageUrl,
-                url: `${protocol}://${host}/blog/${article.slug}`,
+                url: `${SITE_URL}/blog/${article.slug}`,
                 keywords: article.seoKeywords || '',
               };
               console.log('[SSR] Article data:', { title: articleData.title, image: articleData.image });
@@ -163,7 +165,7 @@ export async function setupVite(app: Express, server: Server) {
         }
       }
 
-      const page = await vite.transformIndexHtml(url, template);
+      const page = await vite.transformIndexHtml(urlPath, template);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);
     } catch (e) {
       vite.ssrFixStacktrace(e as Error);

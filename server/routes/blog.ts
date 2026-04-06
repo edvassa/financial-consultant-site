@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router } from "express";
 import { getDb } from "../db";
 import { blogArticles } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
@@ -6,7 +6,7 @@ import { storagePut } from "../storage";
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
+import { SITE_URL } from "../../config.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const router = Router();
 
@@ -28,7 +28,6 @@ async function generateBlogHtmlFile(article: any) {
     const title = article.seoTitle || article.title;
     const description = article.seoDescription || article.excerpt || article.content.substring(0, 160);
     const image = article.imageUrl || '';
-    const SITE_URL = "https://finconsult-turcanelena.manus.space";
     const url = `${SITE_URL}/blog/${article.slug}`;
     const ogImage = image ? `<meta property="og:image" content="${escapeHtml(image)}" />` : '';
     const ogImageWidth = image ? `<meta property="og:image:width" content="1200" />` : '';
@@ -160,24 +159,23 @@ router.get("/og/:slug", async (req, res) => {
       return res.status(500).send('<html><head><title>Error</title></head><body>Database error</body></html>');
     }
     
-    const slug = req.params.slug;
-    const article = await db
-      .select()
-      .from(blogArticles)
-      .where(eq(blogArticles.slug, slug))
-      .limit(1);
+      const slug = req.params.slug;
+      const article = await db
+        .select()
+        .from(blogArticles)
+        .where(eq(blogArticles.slug, slug))
+        .limit(1);
 
-    if (article.length === 0) {
-      return res.status(404).send('<html><head><title>Not Found</title></head><body>Article not found</body></html>');
-    }
+      if (article.length === 0) {
+        return res.status(404).send('<html><head><title>Not Found</title></head><body>Article not found</body></html>');
+      }
 
-    const data = article[0];
-    const title = data.seoTitle || data.title;
-    const description = data.seoDescription || data.excerpt || data.content.substring(0, 160);
-    const image = data.imageUrl || '';
-    // HARDCODED SITE_URL - never use req.url or req.originalUrl
-    const SITE_URL = "https://finconsult-turcanelena.manus.space";
-    const url = `${SITE_URL}/blog/${slug}`;
+      const data = article[0];
+      const title = data.seoTitle || data.title;
+      const description = data.seoDescription || data.excerpt || data.content.substring(0, 160);
+      const image = data.imageUrl || '';
+      // Use hardcoded SITE_URL from config - never use req.url or req.originalUrl
+      const url = `${SITE_URL}/blog/${slug}`;
 
     // Minimal HTML with OG tags - NO React, NO JavaScript, NO div#root
     // IMPORTANT: og:url MUST use hardcoded SITE_URL, never req.url or req.originalUrl
@@ -198,7 +196,7 @@ router.get("/og/:slug", async (req, res) => {
   <meta property="og:type" content="article" />
   <meta property="og:title" content="${escapeHtml(title)}" />
   <meta property="og:description" content="${escapeHtml(description)}" />
-  <meta property="og:url" content="${SITE_URL}/blog/${slug}" />
+  <meta property="og:url" content="${url}" />
   <meta property="og:site_name" content="FinDirector" />
   <meta property="og:locale" content="ru_RU" />
   ${ogImage}
@@ -464,8 +462,7 @@ router.get("/blog/:slug", async (req, res, next) => {
       const title = data.seoTitle || data.title;
       const description = data.seoDescription || data.excerpt || data.content.substring(0, 160);
       const image = data.imageUrl || '';
-      // HARDCODED SITE_URL - never use req.url or req.originalUrl
-      const SITE_URL = "https://finconsult-turcanelena.manus.space";
+      // Use hardcoded SITE_URL from config - never use req.url or req.originalUrl
       const url = `${SITE_URL}/blog/${slug}`;
 
       const ogImage = image ? `<meta property="og:image" content="${escapeHtml(image)}" />` : '';

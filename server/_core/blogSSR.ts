@@ -4,6 +4,7 @@ import { type Express, type Request, type Response, type NextFunction } from "ex
 import { getDb } from "../db";
 import { blogArticles } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
+import { SITE_URL } from "../../config.js";
 
 function escapeHtml(text: string): string {
   const map: { [key: string]: string } = {
@@ -40,11 +41,12 @@ export async function setupBlogSSR(app: Express) {
             const article = articles[0];
             
             // Store article data in response locals so we can use it in the HTML template
+            // Use hardcoded SITE_URL from config - never use req.get('host')
             res.locals.article = {
               title: article.seoTitle || article.title,
               description: article.seoDescription || article.excerpt || article.content.substring(0, 160),
               image: article.imageUrl,
-              url: `https://${req.get('host')}/blog/${article.slug}`,
+              url: `${SITE_URL}/blog/${article.slug}`,
               keywords: article.seoKeywords || '',
             };
           }
