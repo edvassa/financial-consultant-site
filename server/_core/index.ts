@@ -179,7 +179,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   <meta property="og:type" content="article" />
   <meta property="og:title" content="${escapeHtml(article.seoTitle || article.title)}" />
   <meta property="og:description" content="${escapeHtml(article.seoDescription || article.excerpt || article.content.substring(0, 160))}" />
-  <meta property="og:url" content="${escapeHtml(`${protocol}://${host}/blog/${encodeURIComponent(article.slug)}`)}" />
+  <meta property="og:url" content="https://finconsult-turcanelena.manus.space/blog/${encodeURIComponent(article.slug)}" />
   <meta property="og:site_name" content="FinDirector" />
   <meta property="og:locale" content="ru_RU" />
   ${article.imageUrl ? `<meta property="og:image" content="${escapeHtml(article.imageUrl)}" />
@@ -201,7 +201,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   <meta property="article:author" content="Елена Цуркан" />
   
   <!-- Canonical URL - MUST be article URL, not homepage -->
-  <link rel="canonical" href="${escapeHtml(`${protocol}://${host}/blog/${article.slug}`)}" />
+  <link rel="canonical" href="https://finconsult-turcanelena.manus.space/blog/${encodeURIComponent(article.slug)}" />
 </head>
 <body>
   <!-- Minimal content for crawlers -->
@@ -213,7 +213,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
                  // Remove manus_scraper parameter from HTML before sending
                 let cleanHtml = minimalHtml.replace(/\?manus_scraper=1/g, '');
                 
-                const canonicalUrl = `${protocol}://${host}/blog/${encodeURIComponent(article.slug)}`;
+                const canonicalUrl = `https://finconsult-turcanelena.manus.space/blog/${encodeURIComponent(article.slug)}`;
                 res.set({
                   'Content-Type': 'text/html; charset=utf-8',
                   'Cache-Control': 'public, max-age=3600',
