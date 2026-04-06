@@ -92,9 +92,37 @@ async function generateBlogHtmlFile(article: any) {
   }
 }
 
+// Public: Get blog articles list - MUST be before /blog/:slug
+router.get("/list", async (req, res) => {
+  try {
+    const db = await getDb();
+    if (!db) {
+      return res.status(500).json({ error: "Database not available" });
+    }
+    const articles = await db
+      .select()
+      .from(blogArticles)
+      .where(eq(blogArticles.published, 1));
+    res.json(articles);
+  } catch (error) {
+    console.error("Error fetching articles:", error);
+    res.status(500).json({ error: "Failed to fetch articles" });
+  }
+});
+
+// Reserved paths that should not be treated as article slugs
+const RESERVED_BLOG_PATHS = ['list', 'search', 'category', 'tag', 'page', 'create', 'edit', 'delete', 'article', 'og', 'admin', 'regenerate-html', 'upload-image'];
+
 // Public: Detect social media bots and return OG tags for /blog/:slug
 router.get("/blog/:slug", async (req, res, next) => {
   try {
+    const slug = req.params.slug;
+    
+    // Skip reserved paths - pass to next route
+    if (RESERVED_BLOG_PATHS.includes(slug)) {
+      return next();
+    }
+    
     const userAgent = (req.headers['user-agent'] || '').toLowerCase();
     const isSocialBot = userAgent.includes('facebookexternalhit') ||
                         userAgent.includes('linkedinbot') ||
@@ -185,23 +213,7 @@ router.get("/blog/:slug", async (req, res, next) => {
   }
 });
 
-// Public: Get blog articles list
-router.get("/list", async (req, res) => {
-  try {
-    const db = await getDb();
-    if (!db) {
-      return res.status(500).json({ error: "Database not available" });
-    }
-    const articles = await db
-      .select()
-      .from(blogArticles)
-      .where(eq(blogArticles.published, 1));
-    res.json(articles);
-  } catch (error) {
-    console.error("Error fetching articles:", error);
-    res.status(500).json({ error: "Failed to fetch articles" });
-  }
-});
+
 
 // Public: Get single article by slug
 router.get("/article/:slug", async (req, res) => {
