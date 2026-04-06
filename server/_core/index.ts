@@ -87,6 +87,7 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
     }
     
     // SSR middleware for social media crawlers - MUST be FIRST
+    // BUT: Skip API routes (/api/*) and reserved paths
     app.use(async (req, res, next) => {
       const userAgent = req.get('user-agent') || '';
       const path = req.path;
@@ -94,10 +95,25 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
       
       console.log('[SSR] Request:', { path, url, userAgent: userAgent.substring(0, 50) });
       
+      // Skip API routes - they handle their own responses
+      if (path.startsWith('/api/')) {
+        console.log('[SSR] Skipping API route:', path);
+        return next();
+      }
+      
       // Check if this is a blog article request (serve SSR HTML for all requests to /blog/)
       // This ensures social media crawlers always get correct meta tags regardless of user-agent
       if (path.startsWith('/blog/')) {
         console.log('[SSR] Blog request detected:', path);
+        
+        // Skip reserved paths that are handled by API routes
+        const reservedPaths = ['list', 'search', 'category', 'tag', 'page', 'create', 'edit', 'delete', 'article', 'og', 'admin', 'regenerate-html', 'upload-image'];
+        const slug = path.split('/')[2]; // Get first segment after /blog/
+        if (reservedPaths.includes(slug)) {
+          console.log('[SSR] Skipping reserved path:', slug);
+          return next();
+        }
+        
         // Remove query parameters for clean og:url
         let cleanPath = path;
         if (url.includes('?')) {
@@ -206,8 +222,6 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
         } else {
           console.log('[SSR] Not a blog URL, path:', path);
         }
-      } else {
-        console.log('[SSR] Not a social media crawler');
       }
       
       next();

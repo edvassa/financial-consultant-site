@@ -93,7 +93,7 @@ async function generateBlogHtmlFile(article: any) {
 }
 
 // Public: Get blog articles list - MUST be before /blog/:slug
-router.get("/list", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const db = await getDb();
     if (!db) {
@@ -110,109 +110,23 @@ router.get("/list", async (req, res) => {
   }
 });
 
-// Reserved paths that should not be treated as article slugs
-const RESERVED_BLOG_PATHS = ['list', 'search', 'category', 'tag', 'page', 'create', 'edit', 'delete', 'article', 'og', 'admin', 'regenerate-html', 'upload-image'];
-
-// Public: Detect social media bots and return OG tags for /blog/:slug
-router.get("/blog/:slug", async (req, res, next) => {
+// Public: Get blog articles list - MUST be before /blog/:slug
+router.get("/list", async (req, res) => {
   try {
-    const slug = req.params.slug;
-    
-    // Skip reserved paths - pass to next route
-    if (RESERVED_BLOG_PATHS.includes(slug)) {
-      return next();
+    const db = await getDb();
+    if (!db) {
+      return res.status(500).json({ error: "Database not available" });
     }
-    
-    const userAgent = (req.headers['user-agent'] || '').toLowerCase();
-    const isSocialBot = userAgent.includes('facebookexternalhit') ||
-                        userAgent.includes('linkedinbot') ||
-                        userAgent.includes('twitterbot') ||
-                        userAgent.includes('manus_scraper');
-    
-    if (isSocialBot) {
-      // Return OG tags for social media bots
-      const db = await getDb();
-      if (!db) {
-        return res.status(500).send('<html><head><title>Error</title></head><body>Database error</body></html>');
-      }
-      
-      const slug = req.params.slug;
-      const article = await db
-        .select()
-        .from(blogArticles)
-        .where(eq(blogArticles.slug, slug))
-        .limit(1);
-
-      if (article.length === 0) {
-        return res.status(404).send('<html><head><title>Not Found</title></head><body>Article not found</body></html>');
-      }
-
-      const data = article[0];
-      const title = data.seoTitle || data.title;
-      const description = data.seoDescription || data.excerpt || data.content.substring(0, 160);
-      const image = data.imageUrl || '';
-      // HARDCODED SITE_URL - never use req.url or req.originalUrl
-      const SITE_URL = "https://finconsult-turcanelena.manus.space";
-      const url = `${SITE_URL}/blog/${slug}`;
-
-      const ogImage = image ? `<meta property="og:image" content="${escapeHtml(image)}" />` : '';
-      const ogImageWidth = image ? `<meta property="og:image:width" content="1200" />` : '';
-      const ogImageHeight = image ? `<meta property="og:image:height" content="630" />` : '';
-      const twitterImage = image ? `<meta name="twitter:image" content="${escapeHtml(image)}" />` : '';
-      
-      const html = `<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${escapeHtml(title)}</title>
-  <meta name="description" content="${escapeHtml(description)}" />
-  
-  <!-- Open Graph Tags -->
-  <meta property="og:type" content="article" />
-  <meta property="og:title" content="${escapeHtml(title)}" />
-  <meta property="og:description" content="${escapeHtml(description)}" />
-  <meta property="og:url" content="${url}" />
-  <meta property="og:site_name" content="FinDirector" />
-  <meta property="og:locale" content="ru_RU" />
-  ${ogImage}
-  ${ogImageWidth}
-  ${ogImageHeight}
-  
-  <!-- Facebook App ID -->
-  <meta property="fb:app_id" content="1756111292309631" />
-  
-  <!-- Canonical URL -->
-  <link rel="canonical" href="${escapeHtml(url)}" />
-  
-  <!-- Twitter Card Tags -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="${escapeHtml(title)}" />
-  <meta name="twitter:description" content="${escapeHtml(description)}" />
-  ${twitterImage}
-</head>
-<body>
-</body>
-</html>`;
-
-      res.set({
-        'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'public, max-age=3600',
-        'Link': `<${url}>; rel="canonical"`,
-        'X-Canonical-URL': url,
-        'X-Bot-Response': 'true'
-      });
-      return res.send(html);
-    }
-    
-    // For real users, pass to next middleware (React app)
-    next();
+    const articles = await db
+      .select()
+      .from(blogArticles)
+      .where(eq(blogArticles.published, 1));
+    res.json(articles);
   } catch (error) {
-    console.error("Error in blog bot detection:", error);
-    next();
+    console.error("Error fetching articles:", error);
+    res.status(500).json({ error: "Failed to fetch articles" });
   }
 });
-
 
 
 // Public: Get single article by slug
@@ -515,6 +429,100 @@ router.post("/upload-image", async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error uploading image:", error);
     res.status(500).json({ error: "Failed to upload image" });
+  }
+});
+
+// Public: Detect social media bots and return OG tags for /blog/:slug
+// MUST be LAST - after all specific routes like /list, /article, /og
+router.get("/blog/:slug", async (req, res, next) => {
+  try {
+    const userAgent = (req.headers['user-agent'] || '').toLowerCase();
+    const isSocialBot = userAgent.includes('facebookexternalhit') ||
+                        userAgent.includes('linkedinbot') ||
+                        userAgent.includes('twitterbot') ||
+                        userAgent.includes('manus_scraper');
+    
+    if (isSocialBot) {
+      // Return OG tags for social media bots
+      const db = await getDb();
+      if (!db) {
+        return res.status(500).send('<html><head><title>Error</title></head><body>Database error</body></html>');
+      }
+      
+      const slug = req.params.slug;
+      const article = await db
+        .select()
+        .from(blogArticles)
+        .where(eq(blogArticles.slug, slug))
+        .limit(1);
+
+      if (article.length === 0) {
+        return res.status(404).send('<html><head><title>Not Found</title></head><body>Article not found</body></html>');
+      }
+
+      const data = article[0];
+      const title = data.seoTitle || data.title;
+      const description = data.seoDescription || data.excerpt || data.content.substring(0, 160);
+      const image = data.imageUrl || '';
+      // HARDCODED SITE_URL - never use req.url or req.originalUrl
+      const SITE_URL = "https://finconsult-turcanelena.manus.space";
+      const url = `${SITE_URL}/blog/${slug}`;
+
+      const ogImage = image ? `<meta property="og:image" content="${escapeHtml(image)}" />` : '';
+      const ogImageWidth = image ? `<meta property="og:image:width" content="1200" />` : '';
+      const ogImageHeight = image ? `<meta property="og:image:height" content="630" />` : '';
+      const twitterImage = image ? `<meta name="twitter:image" content="${escapeHtml(image)}" />` : '';
+      
+      const html = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${escapeHtml(title)}</title>
+  <meta name="description" content="${escapeHtml(description)}" />
+  
+  <!-- Open Graph Tags -->
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="${escapeHtml(title)}" />
+  <meta property="og:description" content="${escapeHtml(description)}" />
+  <meta property="og:url" content="${url}" />
+  <meta property="og:site_name" content="FinDirector" />
+  <meta property="og:locale" content="ru_RU" />
+  ${ogImage}
+  ${ogImageWidth}
+  ${ogImageHeight}
+  
+  <!-- Facebook App ID -->
+  <meta property="fb:app_id" content="1756111292309631" />
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="${escapeHtml(url)}" />
+  
+  <!-- Twitter Card Tags -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${escapeHtml(title)}" />
+  <meta name="twitter:description" content="${escapeHtml(description)}" />
+  ${twitterImage}
+</head>
+<body>
+</body>
+</html>`;
+
+      res.set({
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600',
+        'Link': `<${url}>; rel="canonical"`,
+        'X-Canonical-URL': url,
+        'X-Bot-Response': 'true'
+      });
+      return res.send(html);
+    }
+    
+    // For real users, pass to next middleware (React app)
+    next();
+  } catch (error) {
+    console.error("Error in blog bot detection:", error);
+    next();
   }
 });
 
